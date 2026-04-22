@@ -12,7 +12,7 @@ import { LogIn, Menu } from "lucide-react";
 import { useState } from "react";
 
 export function Header() {
-  const [isOpen, setOpen] = useState(false);
+  const [isOpen, setOpen] = useState(false); // State to manage the mobile menu
 
   const session = null; // Placeholder for session management
 
@@ -53,7 +53,10 @@ export function Header() {
   return (
     <header className="fixed top-0 right-0 left-0 z-[999] bg-white">
       <div className="container mx-auto flex items-center justify-between">
-        <Link href="/" className="text-3xl font-bold text-zinc-900">
+        <Link
+          href="/"
+          className="text-3xl font-bold text-zinc-900 tracking-tight"
+        >
           Odonto<span className="text-emerald-500">PRO</span>
         </Link>
 
@@ -65,7 +68,7 @@ export function Header() {
           <SheetTrigger asChild className="md:hidden">
             <Button
               variant="ghost"
-              className="text-black hover:bg-transparent"
+              className="text-black hover:bg-transparent px-6 font-semibold"
               size="icon"
             >
               <Menu className="h-6 w-6" />
