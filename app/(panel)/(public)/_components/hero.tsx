@@ -26,7 +26,7 @@ export function Hero() {
               alt="Imagem de um profissional da saude"
               width={340}
               height={400}
-              className="object-contain"
+              className="object-contain w-full h-auto"
               quality={100}
               priority
             />
