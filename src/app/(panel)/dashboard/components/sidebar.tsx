@@ -4,11 +4,8 @@ import { usePathname } from "next/navigation";
 import { useState } from "react";
 import {
   Sheet,
-  SheetClose,
   SheetContent,
   SheetDescription,
-  SheetFooter,
-  SheetHeader,
   SheetTitle,
   SheetTrigger,
 } from "@/components/ui/sheet";
@@ -23,14 +20,9 @@ import {
   Settings,
 } from "lucide-react";
 import Link from "next/link";
-import { requestFormReset } from "react-dom";
 import Image from "next/image";
 import logoImg from "../../../../public/logo-odonto.png";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
+import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 export function SidebarDashboard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();

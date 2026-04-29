@@ -1,6 +1,5 @@
 import { Button } from "@/components/ui/button";
 import Image from "next/image";
-import doctorImage from "../../../../public/doctor-hero.png";
 
 export function Hero() {
   return (
@@ -22,7 +21,7 @@ export function Hero() {
 
           <div className="">
             <Image
-              src={doctorImage}
+              src="/doctor-hero.png"
               alt="Imagem de um profissional da saude"
               width={340}
               height={400}

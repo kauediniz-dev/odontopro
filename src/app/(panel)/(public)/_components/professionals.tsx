@@ -1,14 +1,5 @@
-import {
-  Card,
-  CardAction,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
-import fotoImg from "../../../../public/foto1.png";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
 export function Professionals() {
@@ -23,7 +14,7 @@ export function Professionals() {
           <Card className="overflow-hidden p-0 gap-0">
             <div className="relative h-48 w-full">
               <Image
-                src={fotoImg}
+                src="/foto1.png"
                 alt="Foto do profissional"
                 fill
                 sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
