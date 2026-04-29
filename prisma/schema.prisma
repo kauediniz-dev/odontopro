@@ -4,8 +4,8 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../lib/generated/prisma"
+  provider = "prisma-client-js"
+  output   = "../lib/generated"
 }
 
 datasource db {
@@ -127,8 +127,9 @@ model User {
   status        Boolean? @default(true)
   timezone      String? 
   stripe_customer_id String? 
+  times String[] @default([])
+
   subscription    Subscription? // relacionamento 1 pra 1
-  
   services        Service[]     
   reminders       Reminder[]
   appointments    Appointment[]
