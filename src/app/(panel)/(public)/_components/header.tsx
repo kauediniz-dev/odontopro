@@ -10,13 +10,17 @@ import {
 import { Button } from "@/components/ui/button";
 import { LogIn, Menu } from "lucide-react";
 import { useState } from "react";
-
+import { useSession } from "next-auth/react";
+import { signIn } from "next-auth/react";
 export function Header() {
+  const { data: session, status } = useSession(); // Placeholder for session management
   const [isOpen, setOpen] = useState(false); // State to manage the mobile menu
 
-  const session = null; // Placeholder for session management
-
   const navItems = [{ href: "#profissionais", label: "Profissionais" }];
+
+  async function handleLogin() {
+    await signIn("github"); // You can replace "github" with the provider you want to use
+  }
 
   const NavLinks = () => (
     <>
@@ -33,16 +37,22 @@ export function Header() {
         </Button>
       ))}
 
-      {session ? (
+      {status === "loading" ? (
+        <span className="text-sm text-gray-500">Carregando...</span>
+      ) : session ? (
         <Link
           href="/dashboard"
-          className="flex items-center justify-center gap-2"
+          className="flex items-center justify-center gap-2 bg-zinc-900 text-white py-1 rounded-md px-2"
         >
           <LogIn />
           Acessar Clinica
         </Link>
       ) : (
-        <Button>
+        <Button
+          onClick={handleLogin}
+          variant="outline"
+          className="flex items-center gap-2"
+        >
           <LogIn />
           Portal da Clinica
         </Button>
