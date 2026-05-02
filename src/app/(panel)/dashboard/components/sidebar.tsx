@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import Image from "next/image";
-import logoImg from "../../../../public/logo-odonto.png";
+import logoImg from "../../../../../public/logo-odonto.png";
 import { Collapsible, CollapsibleContent } from "@/components/ui/collapsible";
 
 export function SidebarDashboard({ children }: { children: React.ReactNode }) {
@@ -147,7 +147,12 @@ export function SidebarDashboard({ children }: { children: React.ReactNode }) {
           <Sheet>
             <div className="flex items-center gap-4">
               <SheetTrigger asChild>
-                <Button variant="outline" size="icon" className="md:hidden">
+                <Button
+                  variant="outline"
+                  size="icon"
+                  onClick={() => setIsCollapsed(false)}
+                  className="md:hidden"
+                >
                   <List className="h-5 w-5" />
                 </Button>
               </SheetTrigger>

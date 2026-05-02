@@ -1,4 +1,13 @@
+import getSession from "@/app/lib/getSession";
+import { redirect } from "next/navigation";
+
 export default function Dashboard() {
+  const session = getSession(); // Placeholder for session management
+
+  if (!session) {
+    redirect("/"); // Redirect to home page if not authenticated
+  }
+
   return (
     <div>
       <h1>Dashboard</h1>
