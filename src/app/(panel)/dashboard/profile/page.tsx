@@ -1,6 +1,7 @@
 import getSession from "@/app/lib/getSession";
 import { redirect } from "next/navigation";
 import { getUserData } from "./_data-access/get-info-user";
+import { ProfileContent } from "./_components/profile";
 
 export default async function Profile() {
   const session = await getSession();
@@ -14,9 +15,5 @@ export default async function Profile() {
   if (!user) {
     redirect("/"); // Redirect to home page if user data is not found
   }
-  return (
-    <div>
-      <h1>Profile</h1>
-    </div>
-  );
+  return <ProfileContent />;
 }
