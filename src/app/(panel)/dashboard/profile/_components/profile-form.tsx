@@ -4,8 +4,8 @@ import { z } from "zod";
 
 const profileSchema = z.object({
   name: z.string().min(2, "O nome é obrigatório"),
-  adress: z.string().optional(),
-  phone: z.string().optional(),
+  address: z.string().optional().or(z.literal("")),
+  phone: z.string().optional().or(z.literal("")),
   status: z.string(),
   timeZone: z.string().min(1, { message: "O time zone é obrigatório" }),
 });
@@ -17,7 +17,7 @@ export function useProfileForm() {
     resolver: zodResolver(profileSchema),
     defaultValues: {
       name: "",
-      adress: "",
+      address: "",
       phone: "",
       status: "ativo",
       timeZone: "",

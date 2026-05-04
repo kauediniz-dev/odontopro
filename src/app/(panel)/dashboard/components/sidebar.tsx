@@ -29,7 +29,7 @@ export function SidebarDashboard({ children }: { children: React.ReactNode }) {
   const [isCollapsed, setIsCollapsed] = useState(false);
 
   return (
-    <div className="flex min-h-screen w-0">
+    <div className="flex min-h-screen w-full">
       <aside
         className={clsx(
           "flex flex-col bg-background border-r transition-all duration-300 p-4 h-full",
@@ -137,12 +137,7 @@ export function SidebarDashboard({ children }: { children: React.ReactNode }) {
           </CollapsibleContent>
         </Collapsible>
       </aside>
-      <div
-        className={clsx("flex flex-1 flex-col transition-all duration-300", {
-          "md:ml-20": isCollapsed,
-          "md:ml-64": !isCollapsed,
-        })}
-      >
+      <div className="flex flex-1 flex-col transition-all duration-300">
         <header className="md:hidden flex items-center justify-between border-b px-4 md:px-6 h-14 z-10 sticky top-0 bg-white">
           <Sheet>
             <div className="flex items-center gap-4">
@@ -199,7 +194,7 @@ export function SidebarDashboard({ children }: { children: React.ReactNode }) {
           </Sheet>
         </header>
 
-        <main className="flex-1 py-4 px-2 md:p-6">{children}</main>
+        <main className="flex-1 w-full bg-gray-50 p-4 md:p-6">{children}</main>
       </div>
     </div>
   );
