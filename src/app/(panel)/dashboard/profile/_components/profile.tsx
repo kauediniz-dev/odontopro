@@ -1,4 +1,5 @@
 "use client";
+import { useState } from "react";
 import { useProfileForm } from "./profile-form";
 import Image from "next/image";
 import imgTest from "../../../../../../public/doctor-hero.png";
@@ -15,15 +16,50 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import {
   Field,
   FieldLabel,
-  FieldDescription,
   FieldError,
   FieldGroup,
 } from "@/components/ui/field";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Button } from "components/ui/button";
+import { ArrowRight } from "lucide-react";
+import { cn } from "@/app/lib/utils";
 export function ProfileContent() {
   const form = useProfileForm();
 
+  const [selectdHours, setSelectedHours] = useState<string[]>([]);
+  const [dialogIsOpen, setDialogIsOpen] = useState(false);
+
   function onSubmit(data: any) {
     console.log(data);
+  }
+
+  function generateTimeSlots(): string[] {
+    // essa função é apenas um exemplo para gerar os horários, você pode adaptar conforme necessário
+    const slots: string[] = [];
+    for (let i = 8; i < 20; i++) {
+      const hour = i.toString().padStart(2, "0");
+      slots.push(`${hour}:00`);
+      slots.push(`${hour}:30`);
+    }
+    return slots;
+  }
+
+  const slots = generateTimeSlots();
+
+  function toggleHour(hour: string) {
+    // essa função toggle o horário selecionado
+    setSelectedHours((prev) =>
+      prev.includes(hour)
+        ? prev.filter((h) => h !== hour)
+        : [...prev, hour].sort(),
+    );
   }
 
   return (
@@ -115,6 +151,62 @@ export function ProfileContent() {
                   </FieldError>
                 )}
               </Field>
+
+              <div className="space-y-2">
+                <Label className="font-semibold">
+                  Configurar horarios da clinica
+                </Label>
+                <Dialog open={dialogIsOpen} onOpenChange={setDialogIsOpen}>
+                  <DialogTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className="w-full justify-between"
+                    >
+                      Clique aqui para selecionar horarios
+                      <ArrowRight className="w-5 h-5" />
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent>
+                    <DialogHeader>
+                      <DialogTitle className="text-center">
+                        Horarios da clinica
+                      </DialogTitle>
+                      <DialogDescription className="text-sm text-center">
+                        Selecione abaixo os horarios de funcionamento da
+                        clinica:
+                      </DialogDescription>
+                    </DialogHeader>
+
+                    <section className="py-4">
+                      <p className="text-sm text-muted-foreground mb-2 ">
+                        Clique para selecionar um horario
+                      </p>
+                      <div className="grid grid-cols-5 gap-2">
+                        {slots.map((hour) => (
+                          <Button
+                            key={hour}
+                            variant="outline"
+                            className={cn(
+                              "h-10",
+                              selectdHours.includes(hour) &&
+                                "border-2 border-emerald-500 text-primary",
+                            )}
+                            onClick={() => toggleHour(hour)}
+                          >
+                            {hour}
+                          </Button>
+                        ))}
+                      </div>
+                    </section>
+                    <Button
+                      className="w-full bg-emerald-600 text-white hover:bg-emerald-500"
+                      onClick={() => setDialogIsOpen(false)}
+                    >
+                      Confirmar
+                    </Button>
+                  </DialogContent>
+                </Dialog>
+              </div>
             </FieldGroup>
           </CardContent>
         </Card>
