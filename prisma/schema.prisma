@@ -31,6 +31,11 @@ model Account {
   @@unique([provider, providerAccountId])
   @@map("accounts")
 }
+
+enum Status {
+  ATIVO
+  INATIVO
+}
  
 model Session {
   id           String   @id @default(cuid())
@@ -82,7 +87,7 @@ model Service {
   description String?
   price       Int
   duration    Int
-  status      Boolean? @default(true)
+  status      Status @default(ATIVO)
   
   userId      String
   user        User     @relation( fields: [userId], references: [id])
@@ -101,7 +106,7 @@ enum Plan {
 
 model Subscription {
   id                 String   @id @default(uuid())
-  status             String
+  status             Status   @default(ATIVO)
   plano              Plan
   priceId            String   
   createdAt          DateTime @default(now())
@@ -123,7 +128,7 @@ model User {
   sessions      Session[]
   address       String? @default("")
   phone         String? @default("")
-  status        Boolean? @default(true)
+  status        Status @default(ATIVO)
   timezone      String? 
   stripe_customer_id String? 
   times String[] @default([])

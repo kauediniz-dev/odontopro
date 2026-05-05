@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { useProfileForm } from "./profile-form";
+import { ProfileFormData, useProfileForm } from "./profile-form";
 import Image from "next/image";
 import imgTest from "../../../../../../public/doctor-hero.png";
 import { Input } from "@/components/ui/input";
@@ -35,9 +35,15 @@ export function ProfileContent() {
 
   const [selectdHours, setSelectedHours] = useState<string[]>([]);
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+  } = form;
 
-  function onSubmit(data: any) {
-    console.log(data);
+  async function onSubmit(values: ProfileFormData) {
+    // aqui você pode enviar os dados do formulário para a API ou fazer o que for necessário
+    console.log("values:", values);
   }
 
   function generateTimeSlots(): string[] {
@@ -62,6 +68,22 @@ export function ProfileContent() {
     );
   }
 
+  const timeZones = Intl.supportedValuesOf("timeZone").filter(
+    (zone) =>
+      zone.startsWith("America/Sao_Paulo") ||
+      zone.startsWith("America/Fortaleza") ||
+      zone.startsWith("America/Cuiaba") ||
+      zone.startsWith("America/Recife") ||
+      zone.startsWith("America/Belem") ||
+      zone.startsWith("America/Maceio") ||
+      zone.startsWith("America/Salvador") ||
+      zone.startsWith("America/Porto_Velho") ||
+      zone.startsWith("America/Manaus") ||
+      zone.startsWith("America/Curiba") ||
+      zone.startsWith("America/Porto_Alegre") ||
+      zone.startsWith("America/Rio_Branco"),
+  );
+
   return (
     <div className="mx-auto">
       <form onSubmit={form.handleSubmit(onSubmit)} className="w-full">
@@ -84,51 +106,47 @@ export function ProfileContent() {
             </div>
             <FieldGroup className="space-y-4">
               <Field>
-                <FieldLabel>Nome Completo:</FieldLabel>
+                <Label className="font-semibold">Nome Completo:</Label>
 
                 <Input
                   {...form.register("name")}
                   placeholder="Digite seu nome completo"
                 />
 
-                {form.formState.errors.name && (
-                  <FieldError>{form.formState.errors.name.message}</FieldError>
-                )}
+                {errors.name && <FieldError>{errors.name.message}</FieldError>}
               </Field>
 
               <Field>
-                <FieldLabel>Endereço Completo:</FieldLabel>
+                <Label className="font-semibold">Endereço Completo:</Label>
 
                 <Input
                   {...form.register("address")}
                   placeholder="Digite o endereço da clinica"
                 />
 
-                {form.formState.errors.address && (
-                  <FieldError>
-                    {form.formState.errors.address.message}
-                  </FieldError>
+                {errors.address && (
+                  <FieldError>{errors.address.message}</FieldError>
                 )}
               </Field>
 
               <Field>
-                <FieldLabel>Telefone:</FieldLabel>
+                <Label className="font-semibold">Telefone:</Label>
 
                 <Input
                   {...form.register("phone")}
-                  placeholder="Digite o telefone"
+                  placeholder="Digite seu telefone"
                 />
 
-                {form.formState.errors.phone && (
-                  <FieldError>{form.formState.errors.phone.message}</FieldError>
+                {errors.phone && (
+                  <FieldError>{errors.phone.message}</FieldError>
                 )}
               </Field>
 
               <Field>
-                <FieldLabel>Status</FieldLabel>
+                <Label className="font-semibold">Status</Label>
 
                 <Select
-                  defaultValue={form.getValues("status")}
+                  value={form.watch("status")}
                   onValueChange={(value: "ativo" | "inativo") =>
                     form.setValue("status", value, {
                       shouldValidate: true,
@@ -145,10 +163,8 @@ export function ProfileContent() {
                   </SelectContent>
                 </Select>
 
-                {form.formState.errors.status && (
-                  <FieldError>
-                    {form.formState.errors.status.message}
-                  </FieldError>
+                {errors.status && (
+                  <FieldError>{errors.status.message}</FieldError>
                 )}
               </Field>
 
@@ -160,7 +176,7 @@ export function ProfileContent() {
                   <DialogTrigger asChild>
                     <Button
                       variant="outline"
-                      className="w-full justify-between"
+                      className="w-full justify-between text-muted-foreground"
                     >
                       Clique aqui para selecionar horarios
                       <ArrowRight className="w-5 h-5" />
@@ -207,6 +223,43 @@ export function ProfileContent() {
                   </DialogContent>
                 </Dialog>
               </div>
+
+              <Field>
+                <FieldLabel className="font-semibold">
+                  Selecione o fuso horário
+                </FieldLabel>
+
+                <Select
+                  value={form.getValues("timeZone")}
+                  onValueChange={(value) =>
+                    form.setValue("timeZone", value, {
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    })
+                  }
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecione seu fuso horário" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {timeZones.map((zone) => (
+                      <SelectItem key={zone} value={zone}>
+                        {zone}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {errors.timeZone && (
+                  <FieldError>{errors.timeZone.message}</FieldError>
+                )}
+              </Field>
+              <Button
+                type="submit"
+                className="w-full bg-emerald-500 hover:bg-emerald-400 text-white"
+              >
+                Salvar Alterações
+              </Button>
             </FieldGroup>
           </CardContent>
         </Card>

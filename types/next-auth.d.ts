@@ -1,3 +1,4 @@
+import { Status } from "@prisma/client";
 import { DefaultSession } from "next-auth";
 
 declare module "next-auth" {
@@ -16,7 +17,7 @@ interface User {
   times: string[];
   adress?: string;
   phone?: string;
-  status: boolean;
+  status: Status;
   created_At: string;
   updated_At: string;
 }
