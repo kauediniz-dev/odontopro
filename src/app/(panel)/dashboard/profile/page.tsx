@@ -15,5 +15,5 @@ export default async function Profile() {
   if (!user) {
     redirect("/"); // Redirect to home page if user data is not found
   }
-  return <ProfileContent />;
+  return <ProfileContent user={user} />;
 }

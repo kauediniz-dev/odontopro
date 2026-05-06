@@ -30,11 +30,31 @@ import {
 import { Button } from "components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/app/lib/utils";
-export function ProfileContent() {
-  const form = useProfileForm();
+import { Prisma } from "@prisma/client";
 
-  const [selectdHours, setSelectedHours] = useState<string[]>([]);
+type UserWithSubscription = Prisma.UserGetPayload<{
+  // Define o tipo UserWithSubscription
+  include: {
+    subscription: true;
+  };
+}>;
+
+interface ProfileContentProps {
+  user: UserWithSubscription;
+}
+
+export function ProfileContent({ user }: ProfileContentProps) {
+  // aqui você pode definir as props que o componente vai receber, como os dados do usuário, etc.
+  const [selectdHours, setSelectedHours] = useState<string[]>(user.times ?? []);
   const [dialogIsOpen, setDialogIsOpen] = useState(false);
+  const form = useProfileForm({
+    name: user.name,
+    address: user.address,
+    phone: user.phone,
+    status: user.status,
+    timeZone: user.timezone,
+  });
+
   const {
     register,
     handleSubmit,
@@ -43,7 +63,11 @@ export function ProfileContent() {
 
   async function onSubmit(values: ProfileFormData) {
     // aqui você pode enviar os dados do formulário para a API ou fazer o que for necessário
-    console.log("values:", values);
+    const profileData = {
+      ...values,
+      times: selectdHours,
+    };
+    console.log("values:", profileData);
   }
 
   function generateTimeSlots(): string[] {
@@ -147,7 +171,7 @@ export function ProfileContent() {
 
                 <Select
                   value={form.watch("status")}
-                  onValueChange={(value: "ativo" | "inativo") =>
+                  onValueChange={(value: "ATIVO" | "INATIVO") =>
                     form.setValue("status", value, {
                       shouldValidate: true,
                       shouldDirty: true,
@@ -158,8 +182,8 @@ export function ProfileContent() {
                     <SelectValue placeholder="Selecione o status" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="ativo">Clinica Aberta</SelectItem>
-                    <SelectItem value="inativo">Clinica Fechada</SelectItem>
+                    <SelectItem value="ATIVO">Clinica Aberta</SelectItem>
+                    <SelectItem value="INATIVO">Clinica Fechada</SelectItem>
                   </SelectContent>
                 </Select>
 
