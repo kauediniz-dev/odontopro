@@ -31,6 +31,7 @@ import { Button } from "components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { cn } from "@/app/lib/utils";
 import { Prisma } from "@prisma/client";
+import { updateProfile } from "../_actions/update-profile";
 
 type UserWithSubscription = Prisma.UserGetPayload<{
   // Define o tipo UserWithSubscription
@@ -63,11 +64,19 @@ export function ProfileContent({ user }: ProfileContentProps) {
 
   async function onSubmit(values: ProfileFormData) {
     // aqui você pode enviar os dados do formulário para a API ou fazer o que for necessário
-    const profileData = {
-      ...values,
-      times: selectdHours,
-    };
-    console.log("values:", profileData);
+    // const profileData = {
+    //   ...values,
+    //   times: selectdHours,
+    // };
+
+    const response = await updateProfile({
+      name: values.name,
+      address: values.address,
+      phone: values.phone,
+      status: values.status === "ATIVO" ? true : false,
+      timeZone: values.timeZone,
+      times: selectdHours || [],
+    });
   }
 
   function generateTimeSlots(): string[] {
@@ -119,7 +128,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
             <div className="flex justify-center">
               <div className="bg-gray-200 relative h-40 w-40 rounded-full overflow-hidden">
                 <Image
-                  src={imgTest}
+                  src={user.image ? user.image : imgTest}
                   alt="Foto da clinica"
                   fill
                   sizes="140px"

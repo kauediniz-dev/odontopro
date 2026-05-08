@@ -36,9 +36,11 @@ export function useProfileForm({
   timeZone,
 }: UseProfileFormProps) {
   return useForm<ProfileFormData>({
+    // aqui você pode configurar o hook useForm, como validação, valores iniciais, etc.
     resolver: zodResolver(profileSchema) as any,
     mode: "onChange",
     defaultValues: {
+      // aqui vocé pode definir os valores iniciais do formulário
       name: name || "",
       address: address || "",
       phone: phone || "",
