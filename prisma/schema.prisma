@@ -129,7 +129,7 @@ model User {
   address       String? @default("")
   phone         String? @default("")
   status        Status @default(ATIVO)
-  timezone      String? 
+  timeZone      String? 
   stripe_customer_id String? 
   times String[] @default([])
 
