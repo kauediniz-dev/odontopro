@@ -2,8 +2,8 @@
 
 import { auth } from "@/app/lib/auth";
 import prisma from "@/app/lib/prisma";
+import { revalidatePath } from "next/cache";
 import { z } from "zod";
-import { tr } from "zod/v4/locales";
 
 const formSchema = z.object({
   name: z
@@ -49,9 +49,16 @@ export async function updateProfile(formData: FormSchema) {
         times: formData.times || [],
       },
     });
-    return { message: "Perfil atualizado com sucesso" };
-  } catch (error) {
-    console.error("Erro ao atualizar perfil:", error);
-    throw new Error("Erro ao atualizar perfil");
+
+    revalidatePath("/dashboard/profile");
+
+    return {
+      data: "Clinical atualizado com sucesso!",
+    };
+  } catch (err) {
+    console.error(err);
+    return {
+      error: "Erro ao atualizar perfil",
+    };
   }
 }

@@ -32,6 +32,8 @@ import { ArrowRight } from "lucide-react";
 import { cn } from "@/app/lib/utils";
 import { Prisma } from "@prisma/client";
 import { updateProfile } from "../_actions/update-profile";
+import { toast } from "sonner";
+import { formatPhoneNumber } from "@/utils/Phone";
 
 type UserWithSubscription = Prisma.UserGetPayload<{
   // Define o tipo UserWithSubscription
@@ -53,7 +55,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
     address: user.address,
     phone: user.phone,
     status: user.status,
-    timeZone: user.timezone,
+    timeZone: user.timeZone,
   });
 
   const {
@@ -63,12 +65,6 @@ export function ProfileContent({ user }: ProfileContentProps) {
   } = form;
 
   async function onSubmit(values: ProfileFormData) {
-    // aqui você pode enviar os dados do formulário para a API ou fazer o que for necessário
-    // const profileData = {
-    //   ...values,
-    //   times: selectdHours,
-    // };
-
     const response = await updateProfile({
       name: values.name,
       address: values.address,
@@ -77,6 +73,13 @@ export function ProfileContent({ user }: ProfileContentProps) {
       timeZone: values.timeZone,
       times: selectdHours || [],
     });
+
+    if (response.error) {
+      toast.error(response.error);
+      return;
+    }
+
+    toast.success(response.data);
   }
 
   function generateTimeSlots(): string[] {
@@ -167,7 +170,15 @@ export function ProfileContent({ user }: ProfileContentProps) {
 
                 <Input
                   {...form.register("phone")}
-                  placeholder="Digite seu telefone"
+                  placeholder="(XX) XXXXX-XXXX"
+                  onChange={(e) => {
+                    const formattedValue = formatPhoneNumber(e.target.value);
+                    form.setValue("phone", formattedValue, {
+                      // atualiza o valor do formulário
+                      shouldValidate: true,
+                      shouldDirty: true,
+                    });
+                  }}
                 />
 
                 {errors.phone && (
@@ -211,7 +222,20 @@ export function ProfileContent({ user }: ProfileContentProps) {
                       variant="outline"
                       className="w-full justify-between text-muted-foreground"
                     >
-                      Clique aqui para selecionar horarios
+                      {selectdHours.length > 0 ? (
+                        <div className="grid grid-cols-3 gap-2">
+                          {selectdHours.slice(0, 6).map((hour) => (
+                            <span
+                              key={hour}
+                              className="rounded-md border border-emerald-500 bg-emerald-500 px-2 py-1 text-center text-xs text-white"
+                            >
+                              {hour}
+                            </span>
+                          ))}
+                        </div>
+                      ) : (
+                        "Clique aqui para selecionar horários"
+                      )}
                       <ArrowRight className="w-5 h-5" />
                     </Button>
                   </DialogTrigger>
@@ -236,9 +260,11 @@ export function ProfileContent({ user }: ProfileContentProps) {
                             key={hour}
                             variant="outline"
                             className={cn(
-                              "h-10",
-                              selectdHours.includes(hour) &&
-                                "border-2 border-emerald-500 text-primary",
+                              "h-10 transition-all",
+
+                              selectdHours.includes(hour)
+                                ? "border-2 border-emerald-500 bg-emerald-500 text-white hover:bg-emerald-600"
+                                : "border border-input",
                             )}
                             onClick={() => toggleHour(hour)}
                           >
@@ -263,7 +289,7 @@ export function ProfileContent({ user }: ProfileContentProps) {
                 </FieldLabel>
 
                 <Select
-                  value={form.getValues("timeZone")}
+                  value={form.watch("timeZone")}
                   onValueChange={(value) =>
                     form.setValue("timeZone", value, {
                       shouldValidate: true,
