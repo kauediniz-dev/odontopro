@@ -7,7 +7,7 @@
  */
 
 export function convertRealToCents(amount: string) {
-  const numericPrice = parseFloat(amount.replace(/\D/g, "").replace(",", ".")); // Remove caracteres não numéricos
+  const numericPrice = parseFloat(amount.replace(/\./g, "").replace(",", ".")); // Remove caracteres não numéricos
   const priceInCents = Math.round(numericPrice * 100); // Converte para centavos
   return priceInCents; // Converte para centavos
 }
