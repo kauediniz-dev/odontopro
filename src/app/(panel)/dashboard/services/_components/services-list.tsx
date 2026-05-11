@@ -1,26 +1,18 @@
 "use client";
 import { useState } from "react";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Button } from "components/ui/button";
-import { Plus } from "lucide-react";
+import { Pencil, Plus, X } from "lucide-react";
 import { DialogService } from "./dialog-service";
+import { Service } from "@prisma/client";
+import formatCurrency from "@/utils/formatCurrency";
 
-export function ServicesList() {
+interface ServicesListProps {
+  services: Service[];
+}
+
+export function ServicesList({ services }: ServicesListProps) {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   return (
     <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
@@ -36,9 +28,39 @@ export function ServicesList() {
               </Button>
             </DialogTrigger>
             <DialogContent>
-              <DialogService />
+              <DialogService
+                closeModal={() => {
+                  setIsDialogOpen(false);
+                }}
+              />
             </DialogContent>
           </CardHeader>
+          <CardContent>
+            <section className="space-y-4 mt-5">
+              {services.map((service) => (
+                <article
+                  key={service.id}
+                  className="flex items-center justify-between"
+                >
+                  <div className="flex items-center space-x-2">
+                    <span className="font-medium">{service.name}</span>
+                    <span className="text-gray-500">-</span>
+                    <span className="text-gray-500">
+                      {formatCurrency(service.price / 100)}
+                    </span>
+                  </div>
+                  <div className="">
+                    <Button variant="ghost" size="icon" onClick={() => {}}>
+                      <Pencil className=" h-4 w-4" />
+                    </Button>
+                    <Button variant="ghost" size="icon" onClick={() => {}}>
+                      <X className=" h-4 w-4" />
+                    </Button>
+                  </div>
+                </article>
+              ))}
+            </section>
+          </CardContent>
         </Card>
       </section>
     </Dialog>

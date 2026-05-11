@@ -2,7 +2,6 @@
 
 import { auth } from "@/app/lib/auth";
 import prisma from "@/app/lib/prisma";
-import { duration } from "node_modules/zod/v4/classic/iso.cjs";
 import { z } from "zod";
 
 const formSchema = z.object({
@@ -32,12 +31,13 @@ export async function createNewService(formData: FormSchema) {
         name: formData.name,
         price: formData.price,
         duration: formData.duration,
-        userId: session.user.id,
+        userId: session?.user?.id,
       },
     });
 
     return { data: newService };
   } catch (err) {
+    console.error(err);
     return { error: "Erro ao criar serviço" };
   }
 }
