@@ -8,5 +8,5 @@ export default async function Services() {
   if (!session) {
     redirect("/"); // Redirect to home page if not authenticated
   }
-  return <ServicesContent userId={session.user.id!} />; // Pass userId as a prop to ServiceContent
+  return <ServicesContent userId={session.user?.id!} />; // Pass userId as a prop to ServiceContent
 }
