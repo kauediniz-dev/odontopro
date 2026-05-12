@@ -20,11 +20,13 @@ export interface UseDialogServiceFormProps {
 
 export type DialogServiceFormData = z.infer<typeof formSchema>; // Define o tipo dos valores do formulário com base no esquema do zod
 
-export function useDialogServiceForm() {
+export function useDialogServiceForm({
+  initialValues,
+}: UseDialogServiceFormProps) {
   // Cria um hook personalizado para o formulário do diálogo de serviço
   return useForm<DialogServiceFormData>({
     resolver: zodResolver(formSchema), // Usa o zodResolver para validação do formulário
-    defaultValues: {
+    defaultValues: initialValues || {
       name: "",
       price: "",
       hours: "",

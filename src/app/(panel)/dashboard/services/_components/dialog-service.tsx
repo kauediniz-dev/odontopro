@@ -21,13 +21,26 @@ import { convertRealToCents } from "@/utils/convert-currency";
 import { createNewService } from "../_actions/create-service";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import { set } from "zod";
+import { updateService } from "../_actions/update-service";
 
 interface DialogServiceProps {
   closeModal: () => void;
+  serviceId?: string;
+  initialValues?: {
+    name: string;
+    price: string;
+    hours: string;
+    minutes: string;
+  };
 }
 
-export function DialogService({ closeModal }: DialogServiceProps) {
-  const form = useDialogServiceForm();
+export function DialogService({
+  closeModal,
+  serviceId,
+  initialValues,
+}: DialogServiceProps) {
+  const form = useDialogServiceForm({ initialValues: initialValues });
   const [loading, setLoading] = useState(false); // Estado para indicar o carregamento
   const router = useRouter(); // Hook para navegação
 
@@ -37,6 +50,18 @@ export function DialogService({ closeModal }: DialogServiceProps) {
     const hours = parseInt(values.hours) || 0;
     const minutes = parseInt(values.minutes) || 0;
     const duration = hours * 60 + minutes;
+
+    if (serviceId) {
+      await editServiceById({
+        serviceId: serviceId,
+        name: values.name,
+        priceInCents: priceInCents,
+        duration: duration,
+      });
+      setLoading(false);
+      return;
+    }
+
     const response = await createNewService({
       // Chama a função para criar um novo serviço
       name: values.name,
@@ -52,6 +77,36 @@ export function DialogService({ closeModal }: DialogServiceProps) {
     }
 
     toast.success("Serviço criado com sucesso!");
+    handleCloseModal();
+    router.refresh();
+  }
+
+  async function editServiceById({
+    serviceId,
+    name,
+    priceInCents,
+    duration,
+  }: {
+    serviceId: string;
+    name: string;
+    priceInCents: number;
+    duration: number;
+  }) {
+    const response = await updateService({
+      serviceId: serviceId,
+      name: name,
+      price: priceInCents,
+      duration: duration,
+    });
+
+    setLoading(false);
+
+    if (response.error) {
+      toast.error(response.error);
+      return;
+    }
+
+    toast.success("Serviço atualizado com sucesso!");
     handleCloseModal();
     router.refresh();
   }
@@ -161,7 +216,9 @@ export function DialogService({ closeModal }: DialogServiceProps) {
           className="w-full font-semibold text-white bg-emerald-500 hover:bg-emerald-600"
           disabled={loading}
         >
-          {loading ? "Cadastrando..." : "Adicionar"}
+          {loading
+            ? "Carregando..."
+            : `${serviceId ? "Editar serviço" : "Atualizar serviço"}`}
         </Button>
       </form>
     </>
