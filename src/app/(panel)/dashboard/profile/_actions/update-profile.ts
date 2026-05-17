@@ -53,7 +53,7 @@ export async function updateProfile(formData: FormSchema) {
     revalidatePath("/dashboard/profile");
 
     return {
-      data: "Clinical atualizado com sucesso!",
+      data: "Clinica atualizado com sucesso!",
     };
   } catch (err) {
     console.error(err);

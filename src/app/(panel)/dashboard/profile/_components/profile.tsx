@@ -233,8 +233,8 @@ export function ProfileContent({ user }: ProfileContentProps) {
                       className="w-full justify-between text-muted-foreground"
                     >
                       {selectdHours.length > 0 ? (
-                        <div className="grid grid-cols-3 gap-2">
-                          {selectdHours.slice(0, 6).map((hour) => (
+                        <div className="grid grid-cols-3 gap-2 flex-1">
+                          {selectdHours.slice(0, 2).map((hour) => (
                             <span
                               key={hour}
                               className="rounded-md border border-emerald-500 bg-emerald-500 px-2 py-1 text-center text-xs text-white"
@@ -242,6 +242,12 @@ export function ProfileContent({ user }: ProfileContentProps) {
                               {hour}
                             </span>
                           ))}
+
+                          {selectdHours.length > 2 && (
+                            <span className="rounded-md border border-emerald-500 bg-white px-2 py-1 text-center text-xs text-emerald-600">
+                              +{selectdHours.length - 2}
+                            </span>
+                          )}
                         </div>
                       ) : (
                         "Clique aqui para selecionar horários"
