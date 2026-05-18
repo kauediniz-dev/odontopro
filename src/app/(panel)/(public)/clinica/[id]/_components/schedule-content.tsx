@@ -1,4 +1,5 @@
 "use client";
+import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import imgTest from "../../../../../../../public/foto1.png";
 import { MapPin } from "lucide-react";
@@ -24,6 +25,7 @@ import {
 } from "@/components/ui/select";
 import { useState, useCallback, useEffect } from "react";
 import { ScheduleTimeList } from "./schedule-time-list";
+import { Controller } from "react-hook-form";
 
 type UserWithServiceAndSubscription = Prisma.UserGetPayload<{
   include: {
@@ -43,18 +45,34 @@ export interface TimeSlot {
 
 export function ScheduleContent({ clinic }: ScheduleContentProps) {
   const form = useAppoinmentForm();
-  const { watch } = form;
+  const { watch, setValue } = form;
+
+  // 2. Inicialize os hooks de navegação
+  const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   const selectedDate = watch("date");
-  const selectedServiceId = form.watch("serviceId");
+  const selectedServiceId = watch("serviceId");
   const phoneRegister = form.register("phone");
-
+  console.log("selectedServiceId:", selectedServiceId);
   const [selectdTime, setSelectedTime] = useState("");
   const [availableTimeSlot, setAvailableTimeSlot] = useState<TimeSlot[]>([]);
   const [loading, setLoading] = useState(false);
 
   // Horarios bloqueados
   const [blockedTimes, setBlockedTimes] = useState<string[]>([]);
+
+  // 3. Função para atualizar a URL sem recarregar a página
+  const updateUrl = (id: string) => {
+    const params = new URLSearchParams(searchParams.toString());
+    if (id) {
+      params.set("serviceId", id);
+    } else {
+      params.delete("serviceId");
+    }
+    router.push(`${pathname}?${params.toString()}`, { scroll: false });
+  };
 
   // Função que busca horarios bloqueados (via fetch HTTP)
   const fetchBlockedTimes = useCallback(
@@ -92,6 +110,23 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
       });
     }
   }, [selectedDate, clinic.times, fetchBlockedTimes, selectdTime]);
+
+  // Este useEffect vai "forçar" o valor da URL para dentro do formulário
+  // assim que a página carregar no navegador
+  useEffect(() => {
+    const serviceIdFromUrl = searchParams.get("serviceId");
+
+    // Só atualizamos se houver algo na URL e o formulário ainda estiver vazio
+    if (serviceIdFromUrl && !selectedServiceId) {
+      setValue("serviceId", serviceIdFromUrl, {
+        shouldValidate: true,
+        shouldDirty: true,
+      });
+    }
+  }, [searchParams, setValue, selectedServiceId]);
+
+  // ... restante do seu código e console.log
+
   return (
     <div className="w-full flex flex-col pb-10">
       <div className="h-32 bg-emerald-500">
@@ -193,29 +228,35 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
                 Selecione o Serviço:
               </FieldLabel>
 
-              <Select
-                value={selectedServiceId}
-                onValueChange={(value) => {
-                  form.setValue("serviceId", value, {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                    shouldTouch: true,
-                  });
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecione um serviço" />
-                </SelectTrigger>
+              <Controller
+                control={form.control}
+                name="serviceId"
+                render={({ field }) => (
+                  <Select
+                    value={field.value}
+                    onValueChange={(val) => {
+                      console.log("Valor selecionado no Select:", val); // Debug direto
+                      field.onChange(val);
+                      updateUrl(val); // Atualiza a URL aqui
+                    }}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Selecione um serviço" />
+                    </SelectTrigger>
 
-                <SelectContent>
-                  {clinic.services.map((service) => (
-                    <SelectItem key={service.id} value={service.id}>
-                      {service.name} ({Math.floor(service.duration / 60)}h{" "}
-                      {service.duration % 60}min)
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                    <SelectContent>
+                      {clinic.services.map((service) => (
+                        <SelectItem
+                          key={service.id}
+                          value={String(service.id)} // Garante que seja string
+                        >
+                          {service.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
+              />
 
               {form.formState.errors.serviceId && (
                 <FieldError>

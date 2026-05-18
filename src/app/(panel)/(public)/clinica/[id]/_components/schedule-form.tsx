@@ -2,6 +2,7 @@
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import z from "zod";
+import { useSearchParams } from "next/navigation";
 
 export const appointmentSchema = z.object({
   name: z.string().min(1, "O nome é obrigatório"),
@@ -14,6 +15,10 @@ export const appointmentSchema = z.object({
 export type AppoinmentFormData = z.infer<typeof appointmentSchema>;
 
 export function useAppoinmentForm() {
+  // 1. Captura os parâmetros da URL
+  const searchParams = useSearchParams();
+  const serviceIdFromUrl = searchParams.get("serviceId") || "";
+
   return useForm<AppoinmentFormData>({
     resolver: zodResolver(appointmentSchema),
     defaultValues: {
@@ -21,7 +26,7 @@ export function useAppoinmentForm() {
       email: "",
       phone: "",
       date: new Date(),
-      serviceId: "",
+      serviceId: serviceIdFromUrl, // 2. Usa o valor da URL como padrão
     },
   });
 }
