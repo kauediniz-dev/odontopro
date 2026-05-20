@@ -26,6 +26,9 @@ import {
 import { useState, useCallback, useEffect } from "react";
 import { ScheduleTimeList } from "./schedule-time-list";
 import { Controller } from "react-hook-form";
+import { createNewAppointment } from "../_actions/create-appointment";
+import { toast } from "sonner";
+import { set } from "zod";
 
 type UserWithServiceAndSubscription = Prisma.UserGetPayload<{
   include: {
@@ -62,6 +65,30 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
 
   // Horarios bloqueados
   const [blockedTimes, setBlockedTimes] = useState<string[]>([]);
+  useEffect(() => {
+    // Ao carregar a página, se o formulário estiver vazio, tenta buscar no "bolso" (localStorage)
+    if (!selectedServiceId) {
+      const savedId = localStorage.getItem("lastSelectedServiceId");
+
+      // Verifica se o ID salvo pertence a um serviço desta clínica
+      if (savedId && clinic.services.some((s) => s.id === savedId)) {
+        setValue("serviceId", savedId);
+      }
+    }
+  }, []); // Roda apenas uma vez na montagem
+
+  useEffect(() => {
+    // Sempre que o usuário selecionar um serviço, salva no "bolso" e na URL
+    if (selectedServiceId) {
+      localStorage.setItem("lastSelectedServiceId", selectedServiceId);
+
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("serviceId") !== selectedServiceId) {
+        params.set("serviceId", selectedServiceId);
+        window.history.replaceState(null, "", `?${params.toString()}`);
+      }
+    }
+  }, [selectedServiceId]);
 
   // 3. Função para atualizar a URL sem recarregar a página
   const updateUrl = (id: string) => {
@@ -111,21 +138,55 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
     }
   }, [selectedDate, clinic.times, fetchBlockedTimes, selectdTime]);
 
-  // Este useEffect vai "forçar" o valor da URL para dentro do formulário
-  // assim que a página carregar no navegador
   useEffect(() => {
     const serviceIdFromUrl = searchParams.get("serviceId");
+    const savedServiceId = localStorage.getItem("lastSelectedServiceId");
 
-    // Só atualizamos se houver algo na URL e o formulário ainda estiver vazio
-    if (serviceIdFromUrl && !selectedServiceId) {
-      setValue("serviceId", serviceIdFromUrl, {
-        shouldValidate: true,
-        shouldDirty: true,
-      });
+    // Prioridade: Se tem na URL, usa a URL
+    if (serviceIdFromUrl) {
+      if (selectedServiceId !== serviceIdFromUrl) {
+        setValue("serviceId", serviceIdFromUrl);
+        localStorage.setItem("lastSelectedServiceId", serviceIdFromUrl);
+      }
     }
-  }, [searchParams, setValue, selectedServiceId]);
+    // Se NÃO tem na URL, mas tem salvo no navegador, recupera
+    else if (savedServiceId && !selectedServiceId) {
+      setValue("serviceId", savedServiceId);
+      //  atualiza a URL para manter a consistência
+      const params = new URLSearchParams(window.location.search);
+      params.set("serviceId", savedServiceId);
+      window.history.replaceState(null, "", `?${params.toString()}`);
+    }
 
-  // ... restante do seu código e console.log
+    // Sempre que o selectedServiceId mudar, salva no localStorage
+    if (selectedServiceId) {
+      localStorage.setItem("lastSelectedServiceId", selectedServiceId);
+    }
+  }, [searchParams, selectedServiceId, setValue]);
+
+  async function handleRegisterAppointment(formData: AppoinmentFormData) {
+    if (!selectdTime) {
+      return;
+    }
+
+    const response = await createNewAppointment({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
+      date: selectedDate,
+      serviceId: formData.serviceId,
+      time: selectdTime,
+      clinicId: clinic.id,
+    });
+    if (response.error) {
+      toast.error(response.error);
+      return;
+    }
+
+    toast.success("Consulta agendada com sucesso");
+    form.reset();
+    setSelectedTime("");
+  }
 
   return (
     <div className="w-full flex flex-col pb-10">
@@ -156,7 +217,10 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
       </div>
       {/* Formulario de agendamento */}
       <section className="max-w-2xl mx-auto w-full mt-58">
-        <form className="mx-2 space-y-6 bg-white p-6 border rounded-md shadow-sm">
+        <form
+          className="mx-2 space-y-6 bg-white p-6 border rounded-md shadow-sm"
+          onSubmit={form.handleSubmit(handleRegisterAppointment)}
+        >
           <FieldGroup className="">
             <Field className="my-2">
               <FieldLabel htmlFor="name" className="font-semibold">
@@ -235,9 +299,9 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
                   <Select
                     value={field.value}
                     onValueChange={(val) => {
-                      console.log("Valor selecionado no Select:", val); // Debug direto
                       field.onChange(val);
-                      updateUrl(val); // Atualiza a URL aqui
+                      localStorage.setItem("lastSelectedServiceId", val); // Salva aqui também
+                      updateUrl(val);
                     }}
                   >
                     <SelectTrigger>
@@ -276,6 +340,7 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
                       <p>Nenhum horario disponivel</p>
                     ) : (
                       <ScheduleTimeList
+                        onSelectTime={(time) => setSelectedTime(time)}
                         selectedDate={selectedDate}
                         selectedTime={selectdTime}
                         requiredSlots={
@@ -308,7 +373,9 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
                   !watch("date") ||
                   !watch("phone") ||
                   !watch("name") ||
-                  !watch("email")
+                  !watch("email") ||
+                  !selectdTime || // Adicionado: só libera se escolher o horário
+                  loading // Adicionado: bloqueia enquanto carrega horários
                 }
               >
                 Agendar
