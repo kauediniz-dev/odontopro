@@ -1,5 +1,4 @@
 "use client";
-import { useRouter, useSearchParams, usePathname } from "next/navigation";
 import Image from "next/image";
 import imgTest from "../../../../../../../public/foto1.png";
 import { MapPin } from "lucide-react";
@@ -26,19 +25,11 @@ import {
 import { useState, useCallback, useEffect } from "react";
 import { ScheduleTimeList } from "./schedule-time-list";
 import { Controller } from "react-hook-form";
-import { createNewAppointment } from "../_actions/create-appointment";
-import { toast } from "sonner";
-import { set } from "zod";
-
-type UserWithServiceAndSubscription = Prisma.UserGetPayload<{
-  include: {
-    services: true;
-    subscription: true;
-  };
-}>;
 
 interface ScheduleContentProps {
-  clinic: UserWithServiceAndSubscription;
+  clinic: Prisma.UserGetPayload<{
+    include: { services: true; subscription: true };
+  }>;
 }
 
 export interface TimeSlot {
@@ -47,63 +38,29 @@ export interface TimeSlot {
 }
 
 export function ScheduleContent({ clinic }: ScheduleContentProps) {
-  const form = useAppoinmentForm();
-  const { watch, setValue } = form;
+  const [selectdTime, setSelectedTime] = useState("");
+  const [availableTimeSlot, setAvailableTimeSlot] = useState<any[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [blockedTimes, setBlockedTimes] = useState<string[]>([]);
 
-  // 2. Inicialize os hooks de navegação
-  const router = useRouter();
-  const pathname = usePathname();
-  const searchParams = useSearchParams();
+  const form = useAppoinmentForm();
+  const {
+    watch,
+    setValue,
+    handleSubmit,
+    formState: { errors },
+  } = form;
 
   const selectedDate = watch("date");
   const selectedServiceId = watch("serviceId");
-  const phoneRegister = form.register("phone");
-  console.log("selectedServiceId:", selectedServiceId);
-  const [selectdTime, setSelectedTime] = useState("");
-  const [availableTimeSlot, setAvailableTimeSlot] = useState<TimeSlot[]>([]);
-  const [loading, setLoading] = useState(false);
 
-  // Horarios bloqueados
-  const [blockedTimes, setBlockedTimes] = useState<string[]>([]);
-  useEffect(() => {
-    // Ao carregar a página, se o formulário estiver vazio, tenta buscar no "bolso" (localStorage)
-    if (!selectedServiceId) {
-      const savedId = localStorage.getItem("lastSelectedServiceId");
+  // Busca o serviço atual para mostrar a duração
+  const currentService = clinic.services.find(
+    (s) => String(s.id) === String(selectedServiceId),
+  );
 
-      // Verifica se o ID salvo pertence a um serviço desta clínica
-      if (savedId && clinic.services.some((s) => s.id === savedId)) {
-        setValue("serviceId", savedId);
-      }
-    }
-  }, []); // Roda apenas uma vez na montagem
-
-  useEffect(() => {
-    // Sempre que o usuário selecionar um serviço, salva no "bolso" e na URL
-    if (selectedServiceId) {
-      localStorage.setItem("lastSelectedServiceId", selectedServiceId);
-
-      const params = new URLSearchParams(window.location.search);
-      if (params.get("serviceId") !== selectedServiceId) {
-        params.set("serviceId", selectedServiceId);
-        window.history.replaceState(null, "", `?${params.toString()}`);
-      }
-    }
-  }, [selectedServiceId]);
-
-  // 3. Função para atualizar a URL sem recarregar a página
-  const updateUrl = (id: string) => {
-    const params = new URLSearchParams(searchParams.toString());
-    if (id) {
-      params.set("serviceId", id);
-    } else {
-      params.delete("serviceId");
-    }
-    router.push(`${pathname}?${params.toString()}`, { scroll: false });
-  };
-
-  // Função que busca horarios bloqueados (via fetch HTTP)
   const fetchBlockedTimes = useCallback(
-    async (date: Date): Promise<string[]> => {
+    async (date: Date) => {
       setLoading(true);
       try {
         const dateString = date.toISOString().split("T")[0];
@@ -112,8 +69,8 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
         );
         const json = await response.json();
         setLoading(false);
-        return json; // Retorna os horarios bloqueados
-      } catch (err) {
+        return json;
+      } catch {
         setLoading(false);
         return [];
       }
@@ -121,270 +78,154 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
     [clinic.id],
   );
 
+  // Efeito que busca horários (Agora com selectedServiceId para não precisar de F5)
   useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && selectedServiceId) {
       fetchBlockedTimes(selectedDate).then((blocked) => {
         setBlockedTimes(blocked);
-
         const times = clinic.times || [];
-
-        const finalSlots = times.map((time) => ({
-          time: time,
-          available: !blocked.includes(time),
-        }));
-
-        setAvailableTimeSlot(finalSlots);
+        setAvailableTimeSlot(
+          times.map((t) => ({ time: t, available: !blocked.includes(t) })),
+        );
       });
     }
-  }, [selectedDate, clinic.times, fetchBlockedTimes, selectdTime]);
+  }, [selectedDate, selectedServiceId, fetchBlockedTimes, clinic.times]);
 
-  useEffect(() => {
-    const serviceIdFromUrl = searchParams.get("serviceId");
-    const savedServiceId = localStorage.getItem("lastSelectedServiceId");
-
-    // Prioridade: Se tem na URL, usa a URL
-    if (serviceIdFromUrl) {
-      if (selectedServiceId !== serviceIdFromUrl) {
-        setValue("serviceId", serviceIdFromUrl);
-        localStorage.setItem("lastSelectedServiceId", serviceIdFromUrl);
-      }
-    }
-    // Se NÃO tem na URL, mas tem salvo no navegador, recupera
-    else if (savedServiceId && !selectedServiceId) {
-      setValue("serviceId", savedServiceId);
-      //  atualiza a URL para manter a consistência
-      const params = new URLSearchParams(window.location.search);
-      params.set("serviceId", savedServiceId);
-      window.history.replaceState(null, "", `?${params.toString()}`);
-    }
-
-    // Sempre que o selectedServiceId mudar, salva no localStorage
-    if (selectedServiceId) {
-      localStorage.setItem("lastSelectedServiceId", selectedServiceId);
-    }
-  }, [searchParams, selectedServiceId, setValue]);
-
-  async function handleRegisterAppointment(formData: AppoinmentFormData) {
-    if (!selectdTime) {
-      return;
-    }
-
-    const response = await createNewAppointment({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      date: selectedDate,
-      serviceId: formData.serviceId,
-      time: selectdTime,
-      clinicId: clinic.id,
-    });
-    if (response.error) {
-      toast.error(response.error);
-      return;
-    }
-
-    toast.success("Consulta agendada com sucesso");
-    form.reset();
-    setSelectedTime("");
-  }
+  const handleRegisterAppointment = async (data: AppoinmentFormData) => {
+    console.log({ ...data, time: selectdTime });
+  };
 
   return (
     <div className="w-full flex flex-col pb-10">
       <div className="h-32 bg-emerald-500">
-        <section className="container mx-auto px-4 mt-15">
-          <div className="max-w-2xl mx-auto">
-            <article className="flex flex-col items-center">
-              <div className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-white mb-4">
-                <Image
-                  src={clinic.image ? clinic.image : imgTest}
-                  alt="Foto da clinica"
-                  className="object-cover"
-                  fill
-                  sizes="192px"
-                  priority
-                />
-              </div>
-              <h1 className="text-2xl font-bold mb-2 ">{clinic.name}</h1>
-              <div className="flex items-center gap-0.2">
-                <MapPin className="w-5 h-5" />
-                <span className="ml-2">
-                  {clinic.address ? clinic.address : "Endereço não informado"}
-                </span>
-              </div>
-            </article>
+        <section className="container mx-auto px-4 mt-15 flex flex-col items-center">
+          <div className="relative w-48 h-48 rounded-full overflow-hidden border-4 border-white mb-4">
+            <Image
+              src={clinic.image || imgTest}
+              alt="Clinica"
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+          <h1 className="text-2xl font-bold">{clinic.name}</h1>
+          <div className="flex items-center gap-2">
+            <MapPin className="w-5" />
+            <span>{clinic.address}</span>
           </div>
         </section>
       </div>
-      {/* Formulario de agendamento */}
+
       <section className="max-w-2xl mx-auto w-full mt-58">
         <form
-          className="mx-2 space-y-6 bg-white p-6 border rounded-md shadow-sm"
-          onSubmit={form.handleSubmit(handleRegisterAppointment)}
+          onSubmit={handleSubmit(handleRegisterAppointment)}
+          className="mx-2 space-y-6 bg-white p-6 border rounded-md"
         >
-          <FieldGroup className="">
-            <Field className="my-2">
-              <FieldLabel htmlFor="name" className="font-semibold">
-                Nome completo:
-              </FieldLabel>
-              <Input
-                {...form.register("name")}
-                placeholder="Digite seu nome completo"
-              />
-
-              {form.formState.errors.name && (
-                <FieldError>{form.formState.errors.name.message}</FieldError>
-              )}
-            </Field>
-            <Field className="my-2">
-              <FieldLabel className="font-semibold">Email:</FieldLabel>
-              <Input
-                {...form.register("email")}
-                placeholder="Digite seu email..."
-              />
-
-              {form.formState.errors.email && (
-                <FieldError>{form.formState.errors.email.message}</FieldError>
-              )}
-            </Field>
+          <FieldGroup>
             <Field>
-              <Label className="font-semibold">Telefone:</Label>
-
-              <Input
-                {...phoneRegister}
-                placeholder="(XX) XXXXX-XXXX"
-                onChange={(e) => {
-                  const formattedValue = formatPhoneNumber(e.target.value);
-
-                  form.setValue("phone", formattedValue, {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                  });
-                }}
-              />
-
-              {form.formState.errors.phone && (
-                <FieldError>{form.formState.errors.phone.message}</FieldError>
+              <FieldLabel>Nome completo:</FieldLabel>
+              <Input {...form.register("name")} />
+              {errors.name && (
+                <FieldError>{errors.name.message as string}</FieldError>
               )}
             </Field>
 
-            <Field className="my-2 flex items-center gap-2 space-y-1">
-              <FieldLabel htmlFor="date" className="font-semibold">
-                Data do agendamento:
-              </FieldLabel>
+            <Field>
+              <FieldLabel>Email:</FieldLabel>
+              <Input {...form.register("email")} />
+              {errors.email && (
+                <FieldError>{errors.email.message as string}</FieldError>
+              )}
+            </Field>
 
-              <DateTimePicker
-                initialDate={new Date()}
-                className="w-full rounded border p-2"
-                onChange={(date) =>
-                  form.setValue("date", date, {
-                    shouldValidate: true,
-                    shouldDirty: true,
-                  })
+            <Field>
+              <Label>Telefone:</Label>
+              <Input
+                {...form.register("phone")}
+                onChange={(e) =>
+                  setValue("phone", formatPhoneNumber(e.target.value))
                 }
               />
-
-              {form.formState.errors.date && (
-                <FieldError>{form.formState.errors.date.message}</FieldError>
+              {errors.phone && (
+                <FieldError>{errors.phone.message as string}</FieldError>
               )}
             </Field>
-            <Field className="my-2 space-y-1">
-              <FieldLabel htmlFor="serviceId" className="font-semibold">
-                Selecione o Serviço:
-              </FieldLabel>
 
+            <Field className="flex items-center gap-2">
+              <FieldLabel>Data:</FieldLabel>
+              <DateTimePicker
+                initialDate={selectedDate}
+                onChange={(d) => setValue("date", d)}
+              />
+            </Field>
+
+            <Field>
+              <FieldLabel>Serviço:</FieldLabel>
               <Controller
                 control={form.control}
                 name="serviceId"
                 render={({ field }) => (
-                  <Select
-                    value={field.value}
-                    onValueChange={(val) => {
-                      field.onChange(val);
-                      localStorage.setItem("lastSelectedServiceId", val); // Salva aqui também
-                      updateUrl(val);
-                    }}
-                  >
+                  <Select value={field.value} onValueChange={field.onChange}>
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione um serviço" />
+                      <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
-
                     <SelectContent>
-                      {clinic.services.map((service) => (
-                        <SelectItem
-                          key={service.id}
-                          value={String(service.id)} // Garante que seja string
-                        >
-                          {service.name}
+                      {clinic.services.map((s) => (
+                        <SelectItem key={s.id} value={String(s.id)}>
+                          {s.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
-
-              {form.formState.errors.serviceId && (
-                <FieldError>
-                  {form.formState.errors.serviceId.message}
-                </FieldError>
+              {errors.serviceId && (
+                <FieldError>{errors.serviceId.message as string}</FieldError>
               )}
             </Field>
 
-            {selectedServiceId ? (
-              <Field className="my-2 space-y-1">
-                <div className="space-y-2">
-                  <Label className="font-semibold">Horarios disponiveis:</Label>
-                  <div className="bg-gray-100 p-4 rounded-lg">
-                    {loading ? (
-                      <p>Carregando horarios...</p>
-                    ) : availableTimeSlot.length === 0 ? (
-                      <p>Nenhum horario disponivel</p>
-                    ) : (
-                      <ScheduleTimeList
-                        onSelectTime={(time) => setSelectedTime(time)}
-                        selectedDate={selectedDate}
-                        selectedTime={selectdTime}
-                        requiredSlots={
-                          clinic.services.find(
-                            (service) => service.id === selectedServiceId,
-                          )
-                            ? Math.ceil(
-                                clinic.services.find(
-                                  (service) => service.id === selectedServiceId,
-                                )!.duration / 30,
-                              )
-                            : 1
-                        }
-                        blockedTimes={blockedTimes}
-                        availableTimeSlot={availableTimeSlot}
-                        clinicTimes={clinic.times}
-                      />
-                    )}
-                  </div>
+            {selectedServiceId && (
+              <Field className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <Label>Horários disponíveis:</Label>
+                  {currentService && (
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-1 rounded-full">
+                      Duração: {Math.floor(currentService.duration / 60)}h{" "}
+                      {currentService.duration % 60}min
+                    </span>
+                  )}
+                </div>
+                <div className="bg-gray-100 p-4 rounded-lg">
+                  {loading ? (
+                    <p>Carregando...</p>
+                  ) : (
+                    <ScheduleTimeList
+                      onSelectTime={setSelectedTime}
+                      selectedDate={selectedDate}
+                      selectedTime={selectdTime}
+                      requiredSlots={
+                        currentService
+                          ? Math.ceil(currentService.duration / 30)
+                          : 1
+                      }
+                      blockedTimes={blockedTimes}
+                      availableTimeSlot={availableTimeSlot}
+                      clinicTimes={clinic.times}
+                    />
+                  )}
                 </div>
               </Field>
-            ) : null}
-
-            {clinic.status ? (
-              <Button
-                type="submit"
-                className="w-full bg-emerald-500 hover:bg-emerald-400"
-                disabled={
-                  !watch("serviceId") ||
-                  !watch("date") ||
-                  !watch("phone") ||
-                  !watch("name") ||
-                  !watch("email") ||
-                  !selectdTime || // Adicionado: só libera se escolher o horário
-                  loading // Adicionado: bloqueia enquanto carrega horários
-                }
-              >
-                Agendar
-              </Button>
-            ) : (
-              <p className="bg-red-500 text-white text-center px-4 py-2 rounded-md">
-                A clinica esta fechada
-              </p>
             )}
+
+            <Button
+              type="submit"
+              className="w-full bg-emerald-500"
+              disabled={
+                !selectedServiceId || !selectedDate || !selectdTime || loading
+              }
+            >
+              Agendar
+            </Button>
           </FieldGroup>
         </form>
       </section>
