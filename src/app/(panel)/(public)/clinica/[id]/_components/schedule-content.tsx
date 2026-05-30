@@ -25,6 +25,7 @@ import {
 import { useState, useCallback, useEffect } from "react";
 import { ScheduleTimeList } from "./schedule-time-list";
 import { Controller } from "react-hook-form";
+import { createNewAppointment } from "../_actions/create-appointment";
 
 interface ScheduleContentProps {
   clinic: Prisma.UserGetPayload<{
@@ -110,10 +111,8 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
     ) {
       setValue("serviceId", idToRestore);
     }
-  }, []); // <--- DEIXE VAZIO AQUI para rodar só no mount
+  }, []);
 
-  // Efeito que busca horários (Agora com selectedServiceId para não precisar de F5)
-  // Substitua o bloco dos efeitos de busca (linhas 81 até 114) por este:
   useEffect(() => {
     // Se mudar o serviço ou data, resetamos a lista
     setAvailableTimeSlot([]);
@@ -130,9 +129,19 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
     }
   }, [selectedDate, selectedServiceId, fetchBlockedTimes, clinic.times]);
 
-  const handleRegisterAppointment = async (data: AppoinmentFormData) => {
-    console.log({ ...data, time: selectdTime });
-  };
+  async function handleRegisterAppointment(formData: AppoinmentFormData) {
+    if (!selectdTime) {
+      return;
+    }
+
+    const appointmentData = {
+      ...formData,
+      time: selectdTime,
+      clinicId: clinic.id,
+    };
+
+    await createNewAppointment(appointmentData);
+  }
 
   return (
     <div className="w-full flex flex-col pb-10">
