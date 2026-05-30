@@ -38,6 +38,7 @@ export interface TimeSlot {
 }
 
 export function ScheduleContent({ clinic }: ScheduleContentProps) {
+  const [isMounted, setIsMounted] = useState(false);
   const [selectdTime, setSelectedTime] = useState("");
   const [availableTimeSlot, setAvailableTimeSlot] = useState<any[]>([]);
   const [loading, setLoading] = useState(false);
@@ -45,10 +46,10 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
 
   const form = useAppoinmentForm();
   const {
-    watch,
     setValue,
     handleSubmit,
     formState: { errors },
+    watch,
   } = form;
 
   const selectedDate = watch("date");
@@ -63,14 +64,23 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
     async (date: Date) => {
       setLoading(true);
       try {
-        const dateString = date.toISOString().split("T")[0];
+        // CORREÇÃO: Formata a data respeitando o fuso horário local (YYYY-MM-DD)
+        const year = date.getFullYear();
+        const month = String(date.getMonth() + 1).padStart(2, "0");
+        const day = String(date.getDate()).padStart(2, "0");
+        const dateString = `${year}-${month}-${day}`;
+
         const response = await fetch(
-          `${process.env.NEXT_PUBLIC_URL}/api/schedule/get-appointment?userId=${clinic.id}&date=${dateString}`,
+          `/api/schedule/get-appointment?userId=${clinic.id}&date=${dateString}`,
         );
+
+        if (!response.ok) throw new Error("Erro na API");
+
         const json = await response.json();
         setLoading(false);
         return json;
-      } catch {
+      } catch (err) {
+        console.error("Erro ao buscar horários:", err);
         setLoading(false);
         return [];
       }
@@ -78,15 +88,44 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
     [clinic.id],
   );
 
-  // Efeito que busca horários (Agora com selectedServiceId para não precisar de F5)
+  // No ScheduleContent.tsx
   useEffect(() => {
-    if (selectedDate && selectedServiceId) {
+    setIsMounted(true);
+
+    const fromUrl = new URLSearchParams(window.location.search).get(
+      "serviceId",
+    );
+    const fromStorage = localStorage.getItem("lastSelectedServiceId");
+    const idToRestore = fromUrl || fromStorage;
+
+    // Define a data padrão se estiver vazia
+    if (!form.getValues("date")) {
+      form.setValue("date", new Date());
+    }
+
+    // Restaura o serviço APENAS SE houver algo para restaurar
+    if (
+      idToRestore &&
+      clinic.services.some((s) => String(s.id) === String(idToRestore))
+    ) {
+      setValue("serviceId", idToRestore);
+    }
+  }, []); // <--- DEIXE VAZIO AQUI para rodar só no mount
+
+  // Efeito que busca horários (Agora com selectedServiceId para não precisar de F5)
+  // Substitua o bloco dos efeitos de busca (linhas 81 até 114) por este:
+  useEffect(() => {
+    // Se mudar o serviço ou data, resetamos a lista
+    setAvailableTimeSlot([]);
+
+    if (selectedServiceId && selectedDate) {
       fetchBlockedTimes(selectedDate).then((blocked) => {
-        setBlockedTimes(blocked);
         const times = clinic.times || [];
-        setAvailableTimeSlot(
-          times.map((t) => ({ time: t, available: !blocked.includes(t) })),
-        );
+        const finalSlots = times.map((time) => ({
+          time: time,
+          available: !blocked.includes(time),
+        }));
+        setAvailableTimeSlot(finalSlots);
       });
     }
   }, [selectedDate, selectedServiceId, fetchBlockedTimes, clinic.times]);
@@ -156,6 +195,7 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
               <DateTimePicker
                 initialDate={selectedDate}
                 onChange={(d) => setValue("date", d)}
+                className="mx-2 space-y-2 bg-white p-2 border rounded-md"
               />
             </Field>
 
@@ -165,20 +205,31 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
                 control={form.control}
                 name="serviceId"
                 render={({ field }) => (
-                  <Select value={field.value} onValueChange={field.onChange}>
+                  <Select
+                    value={field.value || ""}
+                    onValueChange={(val) => {
+                      field.onChange(val);
+                      // Força o salvamento imediato para o useEffect de busca reagir
+                      localStorage.setItem("lastSelectedServiceId", val);
+                    }}
+                  >
                     <SelectTrigger>
-                      <SelectValue placeholder="Selecione" />
+                      <SelectValue placeholder="Selecione um serviço" />
                     </SelectTrigger>
                     <SelectContent>
-                      {clinic.services.map((s) => (
-                        <SelectItem key={s.id} value={String(s.id)}>
-                          {s.name}
+                      {clinic.services.map((service) => (
+                        <SelectItem
+                          key={String(service.id)}
+                          value={String(service.id)} // SEMPRE converta para String
+                        >
+                          {service.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
                   </Select>
                 )}
               />
+
               {errors.serviceId && (
                 <FieldError>{errors.serviceId.message as string}</FieldError>
               )}
