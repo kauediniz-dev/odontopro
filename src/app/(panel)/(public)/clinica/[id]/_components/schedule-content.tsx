@@ -27,6 +27,7 @@ import { ScheduleTimeList } from "./schedule-time-list";
 import { Controller } from "react-hook-form";
 import { createNewAppointment } from "../_actions/create-appointment";
 import { toast } from "sonner";
+import { set } from "zod";
 
 interface ScheduleContentProps {
   clinic: Prisma.UserGetPayload<{
@@ -209,7 +210,10 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
               <FieldLabel>Data:</FieldLabel>
               <DateTimePicker
                 initialDate={selectedDate}
-                onChange={(d) => setValue("date", d)}
+                onChange={(d) => {
+                  setValue("date", d);
+                  setSelectedTime("");
+                }}
                 className="mx-2 space-y-2 bg-white p-2 border rounded-md"
               />
             </Field>
@@ -224,6 +228,7 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
                     value={field.value || ""}
                     onValueChange={(val) => {
                       field.onChange(val);
+                      setSelectedTime("");
                       // Força o salvamento imediato para o useEffect de busca reagir
                       localStorage.setItem("lastSelectedServiceId", val);
                     }}
