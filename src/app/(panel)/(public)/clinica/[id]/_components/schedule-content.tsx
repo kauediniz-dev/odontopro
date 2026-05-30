@@ -26,6 +26,7 @@ import { useState, useCallback, useEffect } from "react";
 import { ScheduleTimeList } from "./schedule-time-list";
 import { Controller } from "react-hook-form";
 import { createNewAppointment } from "../_actions/create-appointment";
+import { toast } from "sonner";
 
 interface ScheduleContentProps {
   clinic: Prisma.UserGetPayload<{
@@ -65,7 +66,6 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
     async (date: Date) => {
       setLoading(true);
       try {
-        // CORREÇÃO: Formata a data respeitando o fuso horário local (YYYY-MM-DD)
         const year = date.getFullYear();
         const month = String(date.getMonth() + 1).padStart(2, "0");
         const day = String(date.getDate()).padStart(2, "0");
@@ -89,7 +89,6 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
     [clinic.id],
   );
 
-  // No ScheduleContent.tsx
   useEffect(() => {
     setIsMounted(true);
 
@@ -104,7 +103,6 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
       form.setValue("date", new Date());
     }
 
-    // Restaura o serviço APENAS SE houver algo para restaurar
     if (
       idToRestore &&
       clinic.services.some((s) => String(s.id) === String(idToRestore))
@@ -134,13 +132,21 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
       return;
     }
 
-    const appointmentData = {
-      ...formData,
+    const response = await createNewAppointment({
+      name: formData.name,
+      email: formData.email,
+      phone: formData.phone,
       time: selectdTime,
-      clinicId: clinic.id,
-    };
+      date: formData.date,
+      serviceId: formData.serviceId,
+      clinicId: String(clinic.id),
+    });
 
-    await createNewAppointment(appointmentData);
+    if (response.error) {
+      toast.error(response.error);
+    }
+
+    toast.success("Agendamento criado com sucesso!");
   }
 
   return (

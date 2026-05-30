@@ -19,9 +19,7 @@ export function ScheduleTimeList({
   selectedDate,
   selectedTime,
   requiredSlots,
-  blockedTimes,
   availableTimeSlot,
-  clinicTimes,
   onSelectTime,
 }: ScheduleTimeListProps) {
   const dateIsToday = isToday(selectedDate);
