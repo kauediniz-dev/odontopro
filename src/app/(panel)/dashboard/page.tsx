@@ -4,7 +4,7 @@ import { Calendar } from "lucide-react";
 import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ButtonCopyLink } from "./components/button-copy-link";
-import { Reminders } from "./components/reminders";
+import { Reminders } from "./components/reminders/reminders";
 
 export default async function Dashboard() {
   const session = await getSession(); // Placeholder for session management
