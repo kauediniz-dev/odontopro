@@ -8,12 +8,24 @@ import { Plus, Trash } from "lucide-react";
 import { deleteReminder } from "../../_actions/delete-reminder";
 import { toast } from "sonner";
 import { useRouter } from "next/navigation";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { ReminderContent } from "./reminder-content";
+import { useState } from "react";
 
 interface ReminderListProps {
   reminder: Reminder[];
 }
 export function ReminderList({ reminder }: ReminderListProps) {
   const router = useRouter();
+
+  const [isDialogOpen, setIsDialogOpen] = useState(false);
   async function handleDeleteReminder(Id: string) {
     const response = await deleteReminder({ reminderId: Id });
 
@@ -31,9 +43,23 @@ export function ReminderList({ reminder }: ReminderListProps) {
           <CardTitle className="text-xl md:text-2xl font-bold">
             Lembretes
           </CardTitle>
-          <Button variant="ghost" size="sm" className="w-9 p-0">
-            <Plus className="w-5 h-5" />
-          </Button>
+
+          <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+            <DialogTrigger asChild>
+              <Button variant="ghost" size="sm" className="w-9 p-0">
+                <Plus className="w-5 h-5" />
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <DialogHeader>
+                <DialogTitle>Adicionar Lembrete</DialogTitle>
+                <DialogDescription>
+                  Criar um novo lembrete para ser exibido na agenda.
+                </DialogDescription>
+              </DialogHeader>
+              <ReminderContent closeDialog={() => setIsDialogOpen(false)} />
+            </DialogContent>
+          </Dialog>
         </CardHeader>
         <CardContent>
           {reminder.length === 0 && (
