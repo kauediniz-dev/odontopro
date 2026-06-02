@@ -9,6 +9,7 @@ import { Service } from "@prisma/client";
 import formatCurrency from "@/utils/formatCurrency";
 import { deleteService } from "../_actions/delete-service";
 import { toast } from "sonner";
+import { set } from "zod";
 
 interface ServicesListProps {
   services: Service[];
@@ -35,7 +36,15 @@ export function ServicesList({ services }: ServicesListProps) {
   }
 
   return (
-    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+    <Dialog
+      open={isDialogOpen}
+      onOpenChange={(open) => {
+        setIsDialogOpen(open);
+        if (!open) {
+          setEditingService(null);
+        }
+      }}
+    >
       <section className="mx-auto">
         <Card className="">
           <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
