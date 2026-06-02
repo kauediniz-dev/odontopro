@@ -5,6 +5,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { ButtonCopyLink } from "./components/button-copy-link";
 import { Reminders } from "./components/reminders/reminders";
+import { Appointments } from "./components/appointments/appointments";
 
 export default async function Dashboard() {
   const session = await getSession(); // Placeholder for session management
@@ -26,7 +27,8 @@ export default async function Dashboard() {
       </div>
 
       <section className="grid grid-cols-1 gap-4 lg:grid-cols-2 mt-4">
-        <div className="">Agenda</div>
+        <Appointments userId={session.user?.id!} />
+
         <Reminders userId={session.user?.id!} />
       </section>
     </main>
