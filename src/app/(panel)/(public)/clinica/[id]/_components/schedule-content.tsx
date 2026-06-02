@@ -27,7 +27,6 @@ import { ScheduleTimeList } from "./schedule-time-list";
 import { Controller } from "react-hook-form";
 import { createNewAppointment } from "../_actions/create-appointment";
 import { toast } from "sonner";
-import { set } from "zod";
 
 interface ScheduleContentProps {
   clinic: Prisma.UserGetPayload<{
@@ -82,7 +81,6 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
         setLoading(false);
         return json;
       } catch (err) {
-        console.error("Erro ao buscar horários:", err);
         setLoading(false);
         return [];
       }
