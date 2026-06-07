@@ -22,6 +22,8 @@ export async function createNewAppointment(formdata: FormData) {
     return { error: schema.error.issues[0].message };
   }
 
+  const { name, email, phone, date, serviceId, time, clinicId } = schema.data;
+
   try {
     const selectedDate = new Date(formdata.date);
     const year = selectedDate.getFullYear();
@@ -29,6 +31,20 @@ export async function createNewAppointment(formdata: FormData) {
     const day = selectedDate.getDate();
 
     const appointmentDate = new Date(year, month, day, 0, 0, 0, 0);
+
+    const existingAppointment = await prisma.appointment.findFirst({
+      where: {
+        userId: clinicId,
+        appointmentDate: appointmentDate,
+        time: time,
+      },
+    });
+
+    if (existingAppointment) {
+      return {
+        error: "Este horário acabou de ser preenchido por outra pessoa!",
+      };
+    }
 
     const newAppointment = await prisma.appointment.create({
       data: {

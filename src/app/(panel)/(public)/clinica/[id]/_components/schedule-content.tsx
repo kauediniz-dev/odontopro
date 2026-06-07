@@ -89,6 +89,7 @@ export function ScheduleContent({ clinic }: ScheduleContentProps) {
   );
 
   useEffect(() => {
+    //estou usando um useEffect para aguardar o componente ser montado
     setIsMounted(true);
 
     const fromUrl = new URLSearchParams(window.location.search).get(
