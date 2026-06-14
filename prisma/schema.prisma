@@ -14,7 +14,7 @@ datasource db {
 
 model Account {
   id                String  @id @default(cuid())
-  userId            String  @map("user_id")
+  userId            String  @map("user_id") 
   type              String
   provider          String
   providerAccountId String  @map("provider_account_id")
