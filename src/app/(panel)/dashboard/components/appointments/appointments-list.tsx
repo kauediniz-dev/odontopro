@@ -46,6 +46,8 @@ export function AppointmentsList({ times }: AppointmentsListProps) {
 
       return json;
     },
+    staleTime: 20000, // 20 segundos
+    refetchInterval: 60000, // 1 minuto
   });
 
   //Montar occupantMap slot > appointment
