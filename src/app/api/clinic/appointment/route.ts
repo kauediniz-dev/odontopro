@@ -38,12 +38,6 @@ export const GET = auth(async function GET(request) {
     // Use Date.UTC para evitar que o fuso horário local interfira
     const startDate = new Date(Date.UTC(year, month - 1, day, 0, 0, 0, 0));
     const endDate = new Date(Date.UTC(year, month - 1, day, 23, 59, 59, 999));
-    console.log(
-      "Buscando entre:",
-      startDate.toISOString(),
-      "e",
-      endDate.toISOString(),
-    );
 
     const appointments = await prisma.appointment.findMany({
       where: {
