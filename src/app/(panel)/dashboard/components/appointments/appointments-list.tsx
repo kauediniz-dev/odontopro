@@ -13,6 +13,7 @@ import { cancelAppointment } from "../../_actions/cancel-appointment";
 import { toast } from "sonner";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { DialogAppointment } from "./dialog-appointment";
+import { ButtonPickerAppointment } from "./button-date";
 
 export type AppointmentWithService = Prisma.AppointmentGetPayload<{
   include: { service: true };
@@ -92,9 +93,7 @@ export function AppointmentsList({ times }: AppointmentsListProps) {
           <CardTitle className="text-xl md:text-2xl font-bold">
             Agendamentos
           </CardTitle>
-          <button className="text-sm font-medium text-primary">
-            SELECIONAR DATA
-          </button>
+          <ButtonPickerAppointment />
         </CardHeader>
         <CardContent>
           <ScrollArea className="h-[calc(100vh-20rem)] lg:h-[calc(100vh-15rem)] pr-4">

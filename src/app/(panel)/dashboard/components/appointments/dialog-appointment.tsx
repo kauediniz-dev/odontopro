@@ -4,7 +4,6 @@ import {
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import App from "next/app";
 import { AppointmentWithService } from "./appointments-list";
 import { format } from "date-fns";
 import formatCurrency from "@/utils/formatCurrency";
@@ -38,7 +37,12 @@ export function DialogAppointment({ appointment }: DialogAppointmentProps) {
             </p>
             <p>
               <span className="font-semibold">Data do agendamento:</span>{" "}
-              {format(appointment.appointmentDate, "dd/MM/yyyy")}
+              {new Intl.DateTimeFormat("pt-BR", {
+                timeZone: "UTC",
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              }).format(new Date(appointment.appointmentDate))}
             </p>
             <p>
               <span className="font-semibold">Horario de atendimento:</span>{" "}
