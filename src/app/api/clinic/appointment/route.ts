@@ -1,5 +1,5 @@
-import { auth } from "@/app/lib/auth";
-import prisma from "@/app/lib/prisma";
+import { auth } from "@/lib/auth";
+import prisma from "@/lib/prisma";
 import { NextRequest, NextResponse } from "next/server";
 
 // Rota para buscar todos os agendamentos de uma clínica

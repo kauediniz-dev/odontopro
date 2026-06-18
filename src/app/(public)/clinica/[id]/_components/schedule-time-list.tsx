@@ -2,8 +2,8 @@
 
 import { Button } from "@/components/ui/button";
 import { TimeSlot } from "./schedule-content";
-import { cn } from "@/app/lib/utils";
 import { isToday, isSlotThePast } from "./schedule-utils";
+import { cn } from "@/lib/utils";
 
 interface ScheduleTimeListProps {
   selectedDate: Date;

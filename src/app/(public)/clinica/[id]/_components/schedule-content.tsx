@@ -1,6 +1,6 @@
 "use client";
 import Image from "next/image";
-import imgTest from "../../../../../../../public/foto1.png";
+import imgTest from "../../../../../../public/foto1.png";
 import { MapPin } from "lucide-react";
 import { Prisma } from "@prisma/client";
 import { useAppoinmentForm, AppoinmentFormData } from "./schedule-form";

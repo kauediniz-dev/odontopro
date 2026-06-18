@@ -1,4 +1,3 @@
-import getSession from "@/app/lib/getSession";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "lucide-react";
 import Link from "next/link";
@@ -6,6 +5,7 @@ import { redirect } from "next/navigation";
 import { ButtonCopyLink } from "./components/button-copy-link";
 import { Reminders } from "./components/reminders/reminders";
 import { Appointments } from "./components/appointments/appointments";
+import getSession from "@/lib/getSession";
 
 export default async function Dashboard() {
   const session = await getSession(); // Placeholder for session management

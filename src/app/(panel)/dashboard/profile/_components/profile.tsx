@@ -29,13 +29,13 @@ import {
 } from "@/components/ui/dialog";
 import { Button } from "components/ui/button";
 import { ArrowRight } from "lucide-react";
-import { cn } from "@/app/lib/utils";
 import { Prisma } from "@prisma/client";
 import { updateProfile } from "../_actions/update-profile";
 import { toast } from "sonner";
 import { formatPhoneNumber } from "@/utils/Phone";
 import { signOut, useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 
 type UserWithSubscription = Prisma.UserGetPayload<{
   // Define o tipo UserWithSubscription
