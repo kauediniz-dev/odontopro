@@ -1,7 +1,7 @@
-import getSession from "@/app/lib/getSession";
 import { redirect } from "next/navigation";
 import { getUserData } from "./_data-access/get-info-user";
 import { ProfileContent } from "./_components/profile";
+import getSession from "@/lib/getSession";
 
 export default async function Profile() {
   const session = await getSession();
