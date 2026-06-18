@@ -9,7 +9,6 @@ import { Service } from "@prisma/client";
 import formatCurrency from "@/utils/formatCurrency";
 import { deleteService } from "../_actions/delete-service";
 import { toast } from "sonner";
-import { set } from "zod";
 
 interface ServicesListProps {
   services: Service[];

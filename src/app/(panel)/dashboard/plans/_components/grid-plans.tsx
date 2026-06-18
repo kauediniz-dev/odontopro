@@ -1,0 +1,53 @@
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { subscriptionPlans } from "@/utils/plans";
+
+export function GridPlans() {
+  return (
+    <section className="grid grid-cols-1 lg:grid-cols-2 gap-4 md:grid-cols-5">
+      {subscriptionPlans.map((plan, index) => (
+        <Card
+          key={plan.id}
+          className={`flex flex-col w-full mx-auto overflow-hidden${index === 1 && " p-0 gap-0 border-emerald-500 border-2 "}`}
+        >
+          {index === 1 && (
+            <div className="bg-emerald-500 w-full py-3 text-center rounded-t-xl object-cover">
+              <p className="font-semibold text-white">PROMOÇÃO EXCLUSIVA</p>
+            </div>
+          )}
+          <CardHeader>
+            <CardTitle className="text-xl md:text-2xl">{plan.name}</CardTitle>
+            <CardDescription className={`${index === 1 ? "pb-3" : ""}`}>
+              {plan.description}
+            </CardDescription>
+          </CardHeader>
+          <CardContent>
+            <ul>
+              {plan.features.map((feature, index) => (
+                <li key={index} className="text-sm md:text-base">
+                  {feature}
+                </li>
+              ))}
+            </ul>
+            <div className="mt-4">
+              <p className="text-gray-600 line-through">{plan.oldPrice}</p>
+              <p className="text-black text-2xl font-bold">{plan.price}</p>
+            </div>
+          </CardContent>
+          <CardFooter>
+            <Button className="w-full font-semibold bg-emerald-500 hover:bg-emerald-400">
+              Assinar Plano
+            </Button>
+          </CardFooter>
+        </Card>
+      ))}
+    </section>
+  );
+}
