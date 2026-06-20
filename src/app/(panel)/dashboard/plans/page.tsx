@@ -1,6 +1,7 @@
 import getSession from "@/lib/getSession";
 import { redirect } from "next/navigation";
 import { GridPlans } from "./_components/grid-plans";
+import { getSubscriptions } from "@/utils/get-subscriptions";
 
 export default async function Plans() {
   const session = await getSession(); // Placeholder for session management
@@ -9,9 +10,14 @@ export default async function Plans() {
     redirect("/"); // Redirect to home page if not authenticated
   }
 
+  const subscription = await getSubscriptions({ userId: session?.user?.id! });
+
   return (
     <div>
-      <GridPlans />
+      {subscription?.status !== "ATIVO" && <GridPlans />}
+      {subscription?.status === "ATIVO" && (
+        <h1>Você ja possui uma assinatura ativa</h1>
+      )}
     </div>
   );
 }
