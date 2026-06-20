@@ -1,4 +1,3 @@
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardContent,
@@ -8,6 +7,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { subscriptionPlans } from "@/utils/plans";
+import { SubscriptionButton } from "./subscription-button";
 
 export function GridPlans() {
   return (
@@ -42,9 +42,7 @@ export function GridPlans() {
             </div>
           </CardContent>
           <CardFooter>
-            <Button className="w-full font-semibold bg-emerald-500 hover:bg-emerald-400">
-              Assinar Plano
-            </Button>
+            <SubscriptionButton type={plan.id === "BASIC" ? "BASIC" : "PRO"} />
           </CardFooter>
         </Card>
       ))}
