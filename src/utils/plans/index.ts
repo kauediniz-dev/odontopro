@@ -31,7 +31,7 @@ export const subscriptionPlans = [
     ],
   },
   {
-    id: "PROFESSIONAL",
+    id: "PRO",
     name: "Profissional",
     description: "Perfeito para clinicas GRANDES",
     oldPrice: "R$ 197,99",

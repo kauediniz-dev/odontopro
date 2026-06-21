@@ -2,6 +2,8 @@ import getSession from "@/lib/getSession";
 import { redirect } from "next/navigation";
 import { GridPlans } from "./_components/grid-plans";
 import { getSubscriptions } from "@/utils/get-subscriptions";
+import { Subscript } from "lucide-react";
+import { SubscriptionDetails } from "./_components/subscription-details";
 
 export default async function Plans() {
   const session = await getSession(); // Placeholder for session management
@@ -16,7 +18,7 @@ export default async function Plans() {
     <div>
       {subscription?.status !== "ATIVO" && <GridPlans />}
       {subscription?.status === "ATIVO" && (
-        <h1>Você ja possui uma assinatura ativa</h1>
+        <SubscriptionDetails subscription={subscription!} />
       )}
     </div>
   );
