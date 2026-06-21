@@ -108,7 +108,7 @@ enum Plan {
 
 model Subscription {
   id        String   @id @default(uuid())
-  status    Status   @default(ATIVO)
+  status    Status   
   plano     Plan
   priceId   String
   createdAt DateTime @default(now())
