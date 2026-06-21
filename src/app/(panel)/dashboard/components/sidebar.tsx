@@ -36,7 +36,7 @@ export function SidebarDashboard({ children }: { children: React.ReactNode }) {
           {
             "w-20": isCollapsed,
             "w-64": !isCollapsed,
-            "hidden md:flex md:fixed": true,
+            "hidden md:flex sticky top-0": true,
           },
         )}
       >
