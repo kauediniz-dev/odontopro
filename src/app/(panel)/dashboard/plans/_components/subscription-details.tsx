@@ -11,6 +11,7 @@ import {
 import { subscriptionPlans } from "@/utils/plans";
 import { Subscription } from "@prisma/client";
 import { toast } from "sonner";
+import { createPortalCustomer } from "../_actions/create-portal-customer";
 
 interface SubscriptionDetailsProps {
   subscription: Subscription;
@@ -24,7 +25,14 @@ export function SubscriptionDetails({
   );
 
   async function handleManageSubscription() {
-    console.log("Teste");
+    const portal = await createPortalCustomer();
+
+    if (!portal.sessionId) {
+      toast.error("Ocorreu um erro ao gerenciar a assinatura.");
+      return;
+    }
+
+    window.location.href = portal.sessionId;
   }
 
   return (
@@ -42,7 +50,9 @@ export function SubscriptionDetails({
           >
             {subscription.plano}
           </h1>
-          <div className="bg-emerald-500 font-semibold text-white w-fit px-4 py-1 rounded-md">
+          <div
+            className={`font-semibold bg-black text-white w-fit px-4 py-1 rounded-md ${subscription.plano === "PRO" && "bg-emerald-500"}`}
+          >
             {subscription.status === "ATIVO" ? "ATIVO" : "INATIVO"}
           </div>
         </div>

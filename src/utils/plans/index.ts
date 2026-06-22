@@ -24,7 +24,7 @@ export const subscriptionPlans = [
     oldPrice: "R$ 97,99",
     price: "R$ 29,99",
     features: [
-      `até ${PLANS["BASIC"].maxServices} serviços`,
+      `Até ${PLANS["BASIC"].maxServices} serviços`,
       "Agendamentos ilimitado",
       "Suporte",
       "Relatótios",
@@ -37,7 +37,7 @@ export const subscriptionPlans = [
     oldPrice: "R$ 197,99",
     price: "R$ 97,99",
     features: [
-      `até ${PLANS["PROFESSIONAL"].maxServices} serviços`,
+      `Até ${PLANS["PROFESSIONAL"].maxServices} serviços`,
       "Agendamentos ilimitado",
       "Suporte prioritario",
       "Relatótios avançados",
