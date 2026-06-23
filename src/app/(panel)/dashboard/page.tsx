@@ -6,6 +6,8 @@ import { ButtonCopyLink } from "./components/button-copy-link";
 import { Reminders } from "./components/reminders/reminders";
 import { Appointments } from "./components/appointments/appointments";
 import getSession from "@/lib/getSession";
+import { checkSubscription } from "@/utils/permissions/checkSubscription";
+import { LabelSubscription } from "@/components/ui/label-subscription";
 
 export default async function Dashboard() {
   const session = await getSession(); // Placeholder for session management
@@ -13,6 +15,8 @@ export default async function Dashboard() {
   if (!session) {
     redirect("/"); // Redirect to home page if not authenticated
   }
+
+  const subscription = await checkSubscription(session.user?.id!);
 
   return (
     <main className="">
@@ -26,11 +30,23 @@ export default async function Dashboard() {
         <ButtonCopyLink userId={session.user?.id!} />
       </div>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2 mt-4">
-        <Appointments userId={session.user?.id!} />
+      {subscription?.subscriptionStatus === "EXPIRED" && (
+        <LabelSubscription expired={true} />
+      )}
 
-        <Reminders userId={session.user?.id!} />
-      </section>
+      {subscription?.subscriptionStatus === "ACTIVE" && (
+        <div className="bg-emerald-500 text-white text-sm md:text-base px-3 py-2 rounded-md">
+          <p className="font-semibold">{subscription?.message}</p>
+        </div>
+      )}
+
+      {subscription?.subscriptionStatus !== "EXPIRED" && (
+        <section className="grid grid-cols-1 gap-4 lg:grid-cols-2 mt-4">
+          <Appointments userId={session.user?.id!} />
+
+          <Reminders userId={session.user?.id!} />
+        </section>
+      )}
     </main>
   );
 }
