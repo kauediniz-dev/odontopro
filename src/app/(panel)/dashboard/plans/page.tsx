@@ -2,7 +2,6 @@ import getSession from "@/lib/getSession";
 import { redirect } from "next/navigation";
 import { GridPlans } from "./_components/grid-plans";
 import { getSubscriptions } from "@/utils/get-subscriptions";
-import { Subscript } from "lucide-react";
 import { SubscriptionDetails } from "./_components/subscription-details";
 
 export default async function Plans() {
