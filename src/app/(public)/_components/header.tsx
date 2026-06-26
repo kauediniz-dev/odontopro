@@ -19,7 +19,7 @@ export function Header() {
   const navItems = [{ href: "#profissionais", label: "Profissionais" }];
 
   async function handleLogin() {
-    await signIn("github"); // You can replace "github" with the provider you want to use
+    await signIn("google"); // You can replace "github" with the provider you want to use
   }
 
   const NavLinks = () => (
