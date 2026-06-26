@@ -10,66 +10,91 @@ interface SubscriptionProps {
 }
 
 export async function createSubscription({ type }: SubscriptionProps) {
-  const session = await auth();
-  const userId = session?.user?.id;
+  try {
+    const session = await auth();
+    const userId = session?.user?.id;
 
-  if (!userId) {
-    return {
-      sessionId: "",
-      error: "Usuário não autenticado.",
-    };
-  }
+    // ✅ Validar userId
+    if (!userId) {
+      return {
+        sessionId: "",
+        error: "Usuário não autenticado.",
+      };
+    }
 
-  const findUser = await prisma.user.findFirst({
-    where: {
-      id: userId,
-    },
-  });
-
-  if (!findUser) {
-    return {
-      sessionId: "",
-      error: "Usuário nao encontrado.",
-    };
-  }
-
-  let customerId = findUser.stripe_customer_id;
-
-  if (!findUser.email) {
-    error: "Usuário não possui um email cadastrado.";
-  }
-
-  if (!customerId) {
-    // caso o user não tenha um stripe_customer_id então criaremos um pra ele
-    const stripeCustomer = await stripe.customers.create({
-      email: findUser.email!,
-    });
-
-    await prisma.user.update({
+    const findUser = await prisma.user.findFirst({
       where: {
         id: userId,
       },
-      data: {
-        stripe_customer_id: stripeCustomer.id,
-      },
     });
 
-    customerId = stripeCustomer.id;
-  }
+    // ✅ Validar usuário
+    if (!findUser) {
+      return {
+        sessionId: "",
+        error: "Usuário não encontrado.",
+      };
+    }
 
-  // Criar o CheckOut
+    // ✅ Validar email
+    if (!findUser.email) {
+      return {
+        sessionId: "",
+        error: "Usuário não possui um email cadastrado.",
+      };
+    }
 
-  try {
+    // ✅ Validar variáveis de ambiente
+    const priceId =
+      type === "BASIC"
+        ? process.env.STRIPE_PLAN_BASIC
+        : process.env.STRIPE_PLAN_PROFISSIONAL;
+
+    if (!priceId) {
+      return {
+        sessionId: "",
+        error: `Plano ${type} não configurado.`,
+      };
+    }
+
+    if (!process.env.STRIPE_SUCCESS_URL || !process.env.STRIPE_CANCEL_URL) {
+      return {
+        sessionId: "",
+        error: "URLs de redirecionamento não configuradas.",
+      };
+    }
+
+    let customerId = findUser.stripe_customer_id;
+
+    // ✅ Criar customer se não existir
+    if (!customerId) {
+      const stripeCustomer = await stripe.customers.create({
+        email: findUser.email,
+        metadata: {
+          userId: userId,
+        },
+      });
+
+      await prisma.user.update({
+        where: {
+          id: userId,
+        },
+        data: {
+          stripe_customer_id: stripeCustomer.id,
+        },
+      });
+
+      customerId = stripeCustomer.id;
+    }
+
+    // ✅ Criar checkout session
     const stripeCheckoutSession = await stripe.checkout.sessions.create({
       customer: customerId,
       payment_method_types: ["card"],
       billing_address_collection: "required",
       line_items: [
         {
-          price:
-            type === "BASIC"
-              ? process.env.STRIPE_PLAN_BASIC
-              : process.env.STRIPE_PLAN_PROFISSIONAL,
+          price: priceId,
           quantity: 1,
         },
       ],
@@ -87,10 +112,10 @@ export async function createSubscription({ type }: SubscriptionProps) {
       url: stripeCheckoutSession.url,
     };
   } catch (err) {
-    console.log(err);
+    console.error("[createSubscription] Error:", err);
     return {
       sessionId: "",
-      error: "Falha ao ativar plano",
+      error: "Falha ao ativar plano. Tente novamente.",
     };
   }
 }

@@ -15,7 +15,7 @@ export function GridPlans() {
       {subscriptionPlans.map((plan, index) => (
         <Card
           key={plan.id}
-          className={`flex flex-col w-full mx-auto overflow-hidden${index === 1 && " p-0 gap-0 border-emerald-500 border-2 "}`}
+          className={`flex flex-col w-full mx-auto overflow-hidden ${index === 1 && " p-0 gap-0 border-emerald-500 border-2 "}`}
         >
           {index === 1 && (
             <div className="bg-emerald-500 w-full py-3 text-center rounded-t-xl object-cover">

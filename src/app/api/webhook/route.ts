@@ -9,62 +9,64 @@ export const POST = async (req: Request) => {
   const signature = req.headers.get("stripe-signature");
 
   if (!signature) {
-    return NextResponse.error();
+    return NextResponse.json({ error: "Signature missing" }, { status: 400 });
   }
 
-  const text = await req.text();
-  const event = stripe.webhooks.constructEvent(
-    text,
-    signature,
-    process.env.STRIPE_SECRET_WEBHOOK_KEY as string,
-  );
+  try {
+    const text = await req.text();
+    const event = stripe.webhooks.constructEvent(
+      text,
+      signature,
+      process.env.STRIPE_SECRET_WEBHOOK_KEY as string,
+    );
 
-  switch (event.type) {
-    case "customer.subscription.deleted":
-      const payment = event.data.object as Stripe.Subscription;
-
-      await menageSubscription(
-        // Ir no banco de dados e deletar a assinatura
-        payment.id,
-        payment.customer.toString(),
-        false,
-        true,
-      );
-
-      // Ir no banco de dados e deletar a assinatura
-      break;
-    case "customer.subscription.updated":
-      const paymentIntent = event.data.object as Stripe.Subscription;
-
-      await menageSubscription(
-        // Ir no banco de dados e atualizar a assinatura
-        paymentIntent.id,
-        paymentIntent.customer.toString(),
-        false,
-      );
-      // Ir no banco de dados e atualizar a assinatura
-      break;
-    case "checkout.session.completed":
-      const checkoutSession = event.data.object as Stripe.Checkout.Session;
-
-      const type = checkoutSession?.metadata?.type
-        ? checkoutSession?.metadata?.type
-        : "BASIC";
-
-      // Ir no banco de dados e criar um checkout session
-      if (checkoutSession.subscription && checkoutSession.customer) {
+    switch (event.type) {
+      case "customer.subscription.deleted":
+        const payment = event.data.object as Stripe.Subscription;
         await menageSubscription(
-          checkoutSession.subscription.toString(),
-          checkoutSession.customer.toString(),
-          true,
+          payment.id,
+          payment.customer as string, // ← removeu .toString()
           false,
-          type as Plan,
+          true,
         );
-      }
-      break;
-    default:
-  }
-  revalidatePath("/dashboard/plans");
+        break;
 
-  return NextResponse.json({ received: true });
+      case "customer.subscription.updated":
+        const paymentIntent = event.data.object as Stripe.Subscription;
+        await menageSubscription(
+          paymentIntent.id,
+          paymentIntent.customer as string, // ← removeu .toString()
+          false,
+        );
+        break;
+
+      case "checkout.session.completed":
+        const checkoutSession = event.data.object as Stripe.Checkout.Session;
+
+        if (checkoutSession.subscription && checkoutSession.customer) {
+          const type = (checkoutSession?.metadata?.type || "BASIC") as Plan;
+
+          await menageSubscription(
+            checkoutSession.subscription as string, // ← removeu .toString()
+            checkoutSession.customer as string,
+            true,
+            false,
+            type,
+          );
+        }
+        break;
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    revalidatePath("/dashboard/plans");
+    return NextResponse.json({ received: true });
+  } catch (error) {
+    console.error("Webhook error:", error);
+    return NextResponse.json(
+      { error: "Webhook processing failed" },
+      { status: 500 },
+    );
+  }
 };
