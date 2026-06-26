@@ -5,7 +5,6 @@ import { useSearchParams } from "next/navigation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 import { format } from "date-fns";
-import { Prisma } from "lib/generated/wasm";
 import { useMemo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Eye, X } from "lucide-react";
@@ -14,6 +13,7 @@ import { toast } from "sonner";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { DialogAppointment } from "./dialog-appointment";
 import { ButtonPickerAppointment } from "./button-date";
+import { Prisma } from "@prisma/client";
 
 export type AppointmentWithService = Prisma.AppointmentGetPayload<{
   include: { service: true };

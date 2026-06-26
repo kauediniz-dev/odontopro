@@ -2,10 +2,15 @@ import { Card, CardContent } from "@/components/ui/card";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight } from "lucide-react";
-import { User } from "@prisma/client";
+import { Prisma } from "@prisma/client";
+import { PremiumCardBadge } from "./premium-badge";
+
+type UserWithSubscription = Prisma.UserGetPayload<{
+  include: { subscription: true };
+}>;
 
 interface ProfessionalsProps {
-  professionals: User[];
+  professionals: UserWithSubscription[];
 }
 
 export function Professionals({ professionals }: ProfessionalsProps) {
@@ -22,20 +27,27 @@ export function Professionals({ professionals }: ProfessionalsProps) {
               className="overflow-hidden hover:shadow-lg duration-300 p-0 gap-0"
               key={clinic.id}
             >
-              <div className="relative h-48 w-full">
-                <Image
-                  src={clinic.image ?? "/foto1.png"}
-                  alt="Foto do profissional"
-                  fill
-                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
-                  className="object-cover"
-                />
+              <div className="">
+                <div className="relative h-48 w-full">
+                  <Image
+                    src={clinic.image ?? "/foto1.png"}
+                    alt="Foto do profissional"
+                    fill
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 25vw"
+                    className="object-cover"
+                  />
+
+                  {clinic?.subscription?.status === "ATIVO" &&
+                    clinic?.subscription?.plano === "PRO" && (
+                      <PremiumCardBadge />
+                    )}
+                </div>
               </div>
-              <CardContent className="p-4 space-y-4">
+              <CardContent className="p-4 space-y-4 min-h-[160px] flex flex-col justify-between">
                 <div className="flex items-center justify-between">
                   <div className="">
                     <h3 className="text-lg font-semibold">{clinic.name}</h3>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-500 line-clamp-2">
                       {clinic.address ?? "Endereço nao informado."}
                     </p>
                   </div>

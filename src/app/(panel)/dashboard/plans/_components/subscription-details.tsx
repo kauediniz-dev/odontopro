@@ -9,9 +9,9 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { subscriptionPlans } from "@/utils/plans";
-import { Subscription } from "@prisma/client";
 import { toast } from "sonner";
 import { createPortalCustomer } from "../_actions/create-portal-customer";
+import { Subscription } from "@prisma/client";
 
 interface SubscriptionDetailsProps {
   subscription: Subscription;

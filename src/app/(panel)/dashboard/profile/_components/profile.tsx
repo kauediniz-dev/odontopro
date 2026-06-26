@@ -27,7 +27,7 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-import { Button } from "components/ui/button";
+import { Button } from "@/components/ui/button";
 import { ArrowRight } from "lucide-react";
 import { Prisma } from "@prisma/client";
 import { updateProfile } from "../_actions/update-profile";
@@ -39,7 +39,6 @@ import { cn } from "@/lib/utils";
 import { AvatarProfile } from "./profile-avatar";
 
 type UserWithSubscription = Prisma.UserGetPayload<{
-  // Define o tipo UserWithSubscription
   include: {
     subscription: true;
   };
