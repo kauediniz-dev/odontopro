@@ -27,6 +27,8 @@ Esse projeto foi desenvolvido utilizando as seguintes tecnologias:
 - React
 - Git e GitHub
 - Auth
+- Stipe
+- Cloudinary
 - Windsurf
 
 ## 💻 Projeto
